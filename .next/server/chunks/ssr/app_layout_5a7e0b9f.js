@@ -1,0 +1,3 @@
+module.exports=[62925,a=>{"use strict";var b=a.i(7997);function c({children:a}){return(0,b.jsxs)("html",{lang:"en",children:[(0,b.jsx)("head",{children:(0,b.jsx)("link",{href:"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap",rel:"stylesheet"})}),(0,b.jsx)("body",{className:"bg-nexus-deep text-white font-sans",children:a})]})}a.s(["default",()=>c,"metadata",0,{title:"Nexus Omnia - Personal Assistant",description:"Personal assistance website with modern design"}])}];
+
+//# sourceMappingURL=app_layout_5a7e0b9f.js.map
