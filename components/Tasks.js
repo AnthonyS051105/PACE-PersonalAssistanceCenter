@@ -146,8 +146,8 @@ const Tasks = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Input Area */}
-      <div className="flex gap-2 mb-4">
-        <div className="flex-1 flex items-center bg-black/20 border-b border-white/10 focus-within:border-nexus-purple transition-colors">
+      <div className="flex flex-col gap-2 mb-4">
+        <div className="flex items-center bg-black/20 border-b border-white/10 focus-within:border-nexus-purple transition-colors">
           <input
             type="text"
             value={newTask}
@@ -173,18 +173,20 @@ const Tasks = () => {
             {newPriority.toUpperCase()}
           </button>
         </div>
-        <input
-          type="date"
-          value={newDeadline}
-          onChange={(e) => setNewDeadline(e.target.value)}
-          className="bg-black/20 border-b border-white/10 px-2 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono w-min"
-        />
-        <button
-          onClick={addTask}
-          className="text-nexus-teal hover:text-white transition-colors"
-        >
-          <Plus size={20} />
-        </button>
+        <div className="flex items-center justify-between gap-2">
+          <input
+            type="date"
+            value={newDeadline}
+            onChange={(e) => setNewDeadline(e.target.value)}
+            className="flex-1 bg-black/20 border-b border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
+          />
+          <button
+            onClick={addTask}
+            className="bg-nexus-teal/20 hover:bg-nexus-teal/40 text-nexus-teal border border-nexus-teal/50 rounded px-3 py-1 transition-colors flex items-center justify-center"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Task List */}

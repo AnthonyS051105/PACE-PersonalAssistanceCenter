@@ -38,7 +38,7 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-nexus-deep text-white p-4 md:p-8 font-sans selection:bg-nexus-purple selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-nexus-deep text-white p-4 md:p-8 font-sans selection:bg-nexus-purple selection:text-white relative overflow-x-hidden">
       {/* Background Ambience */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-nexus-purple/20 rounded-full blur-[120px] animate-pulse-slow" />
@@ -48,7 +48,7 @@ const App = () => {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto flex flex-col h-[calc(100vh-4rem)]">
+      <div className="relative z-10 max-w-7xl mx-auto flex flex-col">
         {/* Header / Nav */}
         <motion.header
           variants={containerVariants}
@@ -131,7 +131,7 @@ const App = () => {
         </motion.header>
 
         {/* Content Area */}
-        <div className="flex-1 h-full pb-2 overflow-hidden">
+        <div className="flex-1 pb-12">
           <AnimatePresence mode="wait">
             {activeTab === "dashboard" && (
               <motion.div
@@ -140,33 +140,22 @@ const App = () => {
                 initial="hidden"
                 animate="show"
                 exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
-                className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-3 gap-4 h-full"
+                className="grid grid-cols-1 md:grid-cols-4 gap-6"
               >
-                {/* 1. AI Core (Large, spans 2 rows) */}
+                {/* 1. AI Core (Wide, Short) */}
                 <BentoCard
                   variants={itemVariants}
                   colSpan="md:col-span-2"
-                  rowSpan="md:row-span-2"
+                  rowSpan="md:row-span-1"
                   title="Nexus AI Core"
                   icon={<BrainCircuit />}
                   glowColor="rgba(115, 42, 223, 0.4)"
+                  className="min-h-[350px]"
                 >
                   <AIChat />
                 </BentoCard>
 
-                {/* 2. Agenda (Tall) */}
-                <BentoCard
-                  variants={itemVariants}
-                  colSpan="md:col-span-1"
-                  rowSpan="md:row-span-2"
-                  title="Timeline"
-                  icon={<Calendar />}
-                  glowColor="rgba(101, 187, 189, 0.3)"
-                >
-                  <Agenda />
-                </BentoCard>
-
-                {/* 3. Tasks (Standard) */}
+                {/* 2. Tasks (Standard) */}
                 <BentoCard
                   variants={itemVariants}
                   colSpan="md:col-span-1"
@@ -174,29 +163,45 @@ const App = () => {
                   title="Missions"
                   icon={<CheckSquare />}
                   glowColor="rgba(255, 100, 100, 0.2)"
+                  className="min-h-[350px]"
                 >
                   <Tasks />
                 </BentoCard>
 
-                {/* 4. Quick Vault (Standard) */}
+                {/* 3. Quick Vault (Standard) */}
                 <BentoCard
                   variants={itemVariants}
                   colSpan="md:col-span-1"
                   rowSpan="md:row-span-1"
                   title="Data Vault"
                   icon={<Database />}
+                  className="min-h-[350px]"
                 >
                   <Vault />
                 </BentoCard>
 
-                {/* 5. Notes (Wide) */}
+                {/* 4. Agenda (Tall) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan="md:col-span-4"
+                  colSpan="md:col-span-1"
+                  rowSpan="md:row-span-1"
+                  title="Timeline"
+                  icon={<Calendar />}
+                  glowColor="rgba(101, 187, 189, 0.3)"
+                  className="min-h-[500px]"
+                >
+                  <Agenda />
+                </BentoCard>
+
+                {/* 5. Notes (Wide, Tall) */}
+                <BentoCard
+                  variants={itemVariants}
+                  colSpan="md:col-span-3"
                   rowSpan="md:row-span-1"
                   title="Neural Notes"
                   icon={<LayoutGrid />}
                   glowColor="rgba(255, 255, 255, 0.1)"
+                  className="min-h-[500px]"
                 >
                   <div className="h-full flex gap-4">
                     <div className="w-full md:w-3/4 h-full">
@@ -226,7 +231,7 @@ const App = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
                 transition={{ duration: 0.3 }}
-                className="h-full bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
+                className="min-h-[80vh] bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
               >
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Calendar className="text-nexus-teal" />
@@ -245,7 +250,7 @@ const App = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
                 transition={{ duration: 0.3 }}
-                className="h-full bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
+                className="min-h-[80vh] bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
               >
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <CheckSquare className="text-nexus-teal" />
