@@ -18,6 +18,7 @@ import {
   Check,
   FileText,
   Link as LinkIcon,
+  ArrowLeft,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
@@ -118,7 +119,8 @@ const App = () => {
     {
       id: "1",
       title: "Complete Project Report",
-      description: "Finalize the introduction and methodology sections. Ensure all citations are in APA format.",
+      description:
+        "Finalize the introduction and methodology sections. Ensure all citations are in APA format.",
       deadline: new Date(Date.now() + 86400000),
       completed: false,
       priority: "high",
@@ -127,7 +129,8 @@ const App = () => {
     {
       id: "2",
       title: "Review Calculus III",
-      description: "Go through Chapter 5: Multiple Integrals. Solve practice problems 1-10.",
+      description:
+        "Go through Chapter 5: Multiple Integrals. Solve practice problems 1-10.",
       deadline: new Date(Date.now() - 86400000),
       completed: false,
       priority: "medium",
@@ -299,6 +302,14 @@ const App = () => {
             variants={itemVariants}
             className="flex items-center gap-3"
           >
+            {activeTab !== "dashboard" && (
+              <button
+                onClick={() => setActiveTab("dashboard")}
+                className="p-2 bg-nexus-purple hover:bg-nexus-purple/80 text-white rounded-xl transition-colors shadow-lg shadow-nexus-purple/20 mr-2"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
             <div className="relative">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
                 <Image
@@ -400,22 +411,29 @@ const App = () => {
             className="flex items-center gap-4"
           >
             <div className="flex items-center gap-2 bg-card-bg border border-card-border rounded-full p-1 backdrop-blur-md">
-              {["dashboard", "calendar", "tasks"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`
-                      px-4 py-2 rounded-full text-xs font-medium transition-all
+              {(() => {
+                const baseTabs = ["dashboard", "calendar", "tasks"];
+                const currentTabs = baseTabs.includes(activeTab)
+                  ? baseTabs
+                  : [...baseTabs, activeTab];
+
+                return currentTabs.map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`
+                      px-4 py-2 rounded-full text-xs font-medium transition-all capitalize
                       ${
                         activeTab === tab
                           ? "bg-input-bg text-text-primary shadow-inner"
                           : "text-text-secondary hover:text-text-primary"
                       }
                    `}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
+                  >
+                    {tab}
+                  </button>
+                ));
+              })()}
             </div>
 
             <div className="relative">
@@ -599,6 +617,7 @@ const App = () => {
                   colSpan="md:col-span-2"
                   rowSpan="md:row-span-1"
                   title="A.C.E"
+                  onTripleClick={() => setActiveTab("ai")}
                   icon={
                     <div className="relative w-8 h-8">
                       <Image
@@ -624,6 +643,7 @@ const App = () => {
                   colSpan="md:col-span-1"
                   rowSpan="md:row-span-1"
                   title="Missions"
+                  onTripleClick={() => setActiveTab("tasks")}
                   icon={<CheckSquare />}
                   glowColor={hexToRgba(cardColors.tasks, 0.2)}
                   isCustomizing={customizationMode}
@@ -645,6 +665,7 @@ const App = () => {
                   colSpan="md:col-span-1"
                   rowSpan="md:row-span-1"
                   title="Data Vault"
+                  onTripleClick={() => setActiveTab("vault")}
                   icon={<Database />}
                   glowColor={hexToRgba(cardColors.vault, 0.5)}
                   isCustomizing={customizationMode}
@@ -665,6 +686,7 @@ const App = () => {
                   colSpan="md:col-span-1"
                   rowSpan="md:row-span-1"
                   title="Timeline"
+                  onTripleClick={() => setActiveTab("calendar")}
                   icon={<Calendar />}
                   glowColor={hexToRgba(cardColors.agenda, 0.3)}
                   isCustomizing={customizationMode}
@@ -681,6 +703,7 @@ const App = () => {
                   colSpan="md:col-span-3"
                   rowSpan="md:row-span-1"
                   title="Neural Notes"
+                  onTripleClick={() => setActiveTab("notes")}
                   icon={<LayoutGrid />}
                   glowColor={hexToRgba(cardColors.notes, 0.1)}
                   isCustomizing={customizationMode}
@@ -735,6 +758,71 @@ const App = () => {
                     setTasks={setTasks}
                     searchQuery={searchQuery}
                   />
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "notes" && (
+              <motion.div
+                key="notes"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.3 }}
+                className="min-h-[80vh] bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
+              >
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <LayoutGrid className="text-nexus-teal" />
+                  Neural Notes Workspace
+                </h2>
+                <div className="flex-1 overflow-hidden">
+                  <Notes
+                    searchQuery={searchQuery}
+                    content={noteContent}
+                    setContent={setNoteContent}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "vault" && (
+              <motion.div
+                key="vault"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.3 }}
+                className="min-h-[80vh] bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
+              >
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Database className="text-nexus-teal" />
+                  Data Vault Archive
+                </h2>
+                <div className="flex-1 overflow-hidden">
+                  <Vault
+                    searchQuery={searchQuery}
+                    items={vaultItems}
+                    setItems={setVaultItems}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "ai" && (
+              <motion.div
+                key="ai"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.3 }}
+                className="min-h-[80vh] bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
+              >
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <BrainCircuit className="text-nexus-teal" />
+                  Nexus AI Core - Full Interface
+                </h2>
+                <div className="flex-1 overflow-hidden">
+                  <AIChat />
                 </div>
               </motion.div>
             )}

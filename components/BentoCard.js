@@ -13,10 +13,17 @@ const BentoCard = ({
   isCustomizing = false,
   pickerColor = "#732adf",
   onColorChange,
+  onTripleClick,
   ...props
 }) => {
   return (
     <motion.div
+      onClick={(e) => {
+        if (e.detail === 3 && onTripleClick) {
+          onTripleClick();
+        }
+        props.onClick && props.onClick(e);
+      }}
       className={`
         relative group overflow-hidden rounded-3xl 
         bg-card-bg border border-card-border 
