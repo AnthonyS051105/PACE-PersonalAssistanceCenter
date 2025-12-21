@@ -212,7 +212,7 @@ const App = () => {
                   glowColor="rgba(255, 100, 100, 0.2)"
                   className="h-[500px]"
                 >
-                  <Tasks tasks={tasks} setTasks={setTasks} />
+                  <Tasks tasks={tasks} setTasks={setTasks} compact={true} />
                 </BentoCard>
 
                 {/* 3. Quick Vault (Standard) */}

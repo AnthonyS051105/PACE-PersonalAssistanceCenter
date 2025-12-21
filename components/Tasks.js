@@ -8,12 +8,39 @@ import {
   Star,
   Flame,
   ClipboardList,
+  ArrowUp,
+  ArrowDown,
+  Minus,
 } from "lucide-react";
 
-const Tasks = ({ tasks, setTasks }) => {
+const Tasks = ({ tasks, setTasks, compact = false }) => {
   const [newTask, setNewTask] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
+
+  const priorityConfig = {
+    low: {
+      label: "LOW",
+      color: "text-green-400",
+      bg: "bg-green-500/20",
+      border: "border-green-500/50",
+      icon: <ArrowDown size={10} />,
+    },
+    medium: {
+      label: "MEDIUM",
+      color: "text-blue-400",
+      bg: "bg-blue-500/20",
+      border: "border-blue-500/50",
+      icon: <Minus size={10} />,
+    },
+    high: {
+      label: "HIGH",
+      color: "text-amber-400",
+      bg: "bg-amber-500/20",
+      border: "border-amber-500/50",
+      icon: <ArrowUp size={10} />,
+    },
+  };
 
   const toggleTask = (id) => {
     setTasks(
@@ -65,6 +92,8 @@ const Tasks = ({ tasks, setTasks }) => {
 
   const renderTask = (task, isCritical = false) => {
     const isOverdue = !task.completed && new Date() > task.deadline;
+    const pConfig = priorityConfig[task.priority];
+
     return (
       <div
         key={task.id}
@@ -101,17 +130,25 @@ const Tasks = ({ tasks, setTasks }) => {
           >
             {task.title}
           </p>
-          <p
-            className={`text-[10px] font-mono transition-colors duration-300 ${
-              isOverdue
-                ? "text-red-300"
-                : isCritical
-                ? "text-amber-300"
-                : "text-gray-500"
-            }`}
-          >
-            {task.deadline.toLocaleDateString()} • {task.priority.toUpperCase()}
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p
+              className={`text-[10px] font-mono transition-colors duration-300 ${
+                isOverdue
+                  ? "text-red-300"
+                  : isCritical
+                  ? "text-amber-300"
+                  : "text-gray-500"
+              }`}
+            >
+              {task.deadline.toLocaleDateString()}
+            </p>
+            <span
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${pConfig.bg} ${pConfig.color} ${pConfig.border}`}
+            >
+              {pConfig.icon}
+              {pConfig.label}
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -121,46 +158,83 @@ const Tasks = ({ tasks, setTasks }) => {
     <div className="flex flex-col h-full">
       {/* Input Area */}
       <div className="flex flex-col gap-2 mb-4">
-        <div className="flex items-center bg-black/20 border-b border-white/10 focus-within:border-nexus-purple transition-colors">
-          <input
-            type="text"
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addTask()}
-            placeholder="New Mission..."
-            className="flex-1 bg-transparent px-2 py-2 text-sm text-white focus:outline-none font-mono"
-          />
-          <button
-            onClick={() => {
-              if (newPriority === "high") setNewPriority("medium");
-              else if (newPriority === "medium") setNewPriority("low");
-              else setNewPriority("high");
-            }}
-            className={`mr-2 px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
-              newPriority === "high"
-                ? "bg-amber-500/20 text-amber-400 border border-amber-500/50"
-                : newPriority === "low"
-                ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                : "bg-white/5 text-gray-500 border border-white/10 hover:bg-white/10"
-            }`}
-          >
-            {newPriority.toUpperCase()}
-          </button>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <input
-            type="date"
-            value={newDeadline}
-            onChange={(e) => setNewDeadline(e.target.value)}
-            className="flex-1 bg-black/20 border-b border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
-          />
-          <button
-            onClick={addTask}
-            className="bg-nexus-teal/20 hover:bg-nexus-teal/40 text-nexus-teal border border-nexus-teal/50 rounded px-3 py-1 transition-colors flex items-center justify-center"
-          >
-            <Plus size={16} />
-          </button>
-        </div>
+        {compact ? (
+          // Compact Layout (BentoCard)
+          <>
+            <div className="bg-black/20 border-b border-white/10 focus-within:border-nexus-purple transition-colors">
+              <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addTask()}
+                placeholder="New Mission..."
+                className="w-full bg-transparent px-2 py-2 text-sm text-white focus:outline-none font-mono"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+                className="flex-1 bg-black/20 border-b border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
+              />
+              <button
+                onClick={() => {
+                  const next = { low: "medium", medium: "high", high: "low" };
+                  setNewPriority(next[newPriority]);
+                }}
+                className={`px-2 py-1 text-[10px] font-bold rounded-full border flex items-center gap-1 transition-all ${priorityConfig[newPriority].bg} ${priorityConfig[newPriority].color} ${priorityConfig[newPriority].border}`}
+              >
+                {priorityConfig[newPriority].icon}
+                {priorityConfig[newPriority].label}
+              </button>
+              <button
+                onClick={addTask}
+                className="bg-nexus-teal/20 hover:bg-nexus-teal/40 text-nexus-teal border border-nexus-teal/50 rounded px-3 py-1 transition-colors flex items-center justify-center"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </>
+        ) : (
+          // Standard Layout
+          <>
+            <div className="flex items-center bg-black/20 border-b border-white/10 focus-within:border-nexus-purple transition-colors">
+              <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addTask()}
+                placeholder="New Mission..."
+                className="flex-1 bg-transparent px-2 py-2 text-sm text-white focus:outline-none font-mono"
+              />
+              <button
+                onClick={() => {
+                  const next = { low: "medium", medium: "high", high: "low" };
+                  setNewPriority(next[newPriority]);
+                }}
+                className={`mr-2 px-3 py-1 text-[10px] font-bold rounded-full border flex items-center gap-1 transition-all ${priorityConfig[newPriority].bg} ${priorityConfig[newPriority].color} ${priorityConfig[newPriority].border}`}
+              >
+                {priorityConfig[newPriority].icon}
+                {priorityConfig[newPriority].label}
+              </button>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <input
+                type="date"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+                className="flex-1 bg-black/20 border-b border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
+              />
+              <button
+                onClick={addTask}
+                className="bg-nexus-teal/20 hover:bg-nexus-teal/40 text-nexus-teal border border-nexus-teal/50 rounded px-3 py-1 transition-colors flex items-center justify-center"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Task List */}
