@@ -14,7 +14,9 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-nexus-deep text-white font-sans">{children}</body>
+      <body className="bg-nexus-deep text-foreground font-sans">
+        {children}
+      </body>
     </html>
   );
 }

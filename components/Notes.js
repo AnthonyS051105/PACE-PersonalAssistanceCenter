@@ -156,31 +156,31 @@ const Notes = ({ searchQuery = "" }) => {
             <Sparkles size={14} />
             {isSummarizing ? "SUMMARIZING..." : "AI SUMMARIZE"}
           </button>
-          <div className="w-px h-4 bg-white/10 mx-1"></div>
+          <div className="w-px h-4 bg-card-border mx-1"></div>
           <button
-            className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors"
+            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
             title="Insert Image"
           >
             <ImageIcon size={16} />
           </button>
           <button
-            className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors"
+            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
             title="Code Block"
           >
             <Code size={16} />
           </button>
           <button
-            className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors"
+            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
             title="Latex Mode"
           >
             <span className="font-serif italic font-bold">∑</span>
           </button>
 
-          <div className="w-px h-4 bg-white/10 mx-1"></div>
+          <div className="w-px h-4 bg-card-border mx-1"></div>
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors"
+            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
             title="Upload File"
           >
             <Upload size={16} />
@@ -196,7 +196,7 @@ const Notes = ({ searchQuery = "" }) => {
           <div className="relative">
             <button
               onClick={() => setShowTemplates(!showTemplates)}
-              className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors flex items-center gap-1"
+              className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors flex items-center gap-1"
               title="Templates"
             >
               <LayoutTemplate size={16} />
@@ -204,22 +204,22 @@ const Notes = ({ searchQuery = "" }) => {
             </button>
 
             {showTemplates && (
-              <div className="absolute top-full left-0 mt-1 w-40 bg-gray-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className="absolute top-full left-0 mt-1 w-40 bg-card-bg border border-card-border rounded-lg shadow-xl z-50 overflow-hidden">
                 <button
                   onClick={() => applyTemplate("meeting")}
-                  className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors"
                 >
                   Meeting Notes
                 </button>
                 <button
                   onClick={() => applyTemplate("journal")}
-                  className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors"
                 >
                   Daily Journal
                 </button>
                 <button
                   onClick={() => applyTemplate("code")}
-                  className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors"
                 >
                   Code Docs
                 </button>
@@ -231,7 +231,12 @@ const Notes = ({ searchQuery = "" }) => {
           {lastSaved && (
             <div className="flex items-center gap-1 text-[10px] text-gray-500 mr-2">
               <Save size={12} />
-              <span>{lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+              <span>
+                {lastSaved.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
             </div>
           )}
           <button

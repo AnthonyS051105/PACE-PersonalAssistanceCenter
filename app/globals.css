@@ -1,15 +1,66 @@
 @import "tailwindcss";
 
+:root {
+  /* Dark Mode (Default) */
+  --nexus-purple: #732adf;
+  --nexus-deep: #0c083a;
+  --nexus-teal: #65bbbd;
+  --nexus-dark: #27342c;
+  --nexus-glass: rgba(255, 255, 255, 0.05);
+  --nexus-glassBorder: rgba(255, 255, 255, 0.1);
+  --background: #0c083a;
+  --foreground: #ffffff;
+
+  /* Semantic Variables */
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --input-bg: rgba(0, 0, 0, 0.2);
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af; /* Gray-400 */
+}
+
+[data-theme="light"] {
+  /* Light Mode Palette - Natural & Clean */
+  --nexus-purple: #4f46e5; /* Indigo-600 - Stronger pop */
+  --nexus-deep: #f5f3ff; /* Light Purple / Lavender (Background) */
+  --nexus-teal: #0d9488; /* Teal-600 */
+  --nexus-dark: #cbd5e1; /* Slate-300 */
+  --nexus-glass: rgba(
+    255,
+    255,
+    255,
+    0.05
+  ); /* Keep glass for some elements, but cards use card-bg */
+  --nexus-glassBorder: rgba(0, 0, 0, 0.05);
+  --background: #f5f3ff;
+  --foreground: #0f172a; /* Slate-900 */
+
+  /* Semantic Variables */
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.06);
+  --input-bg: #f1f5f9; /* Slate-100 */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b; /* Slate-500 */
+}
+
 @theme {
   --font-sans: "Outfit", "sans-serif";
   --font-mono: "JetBrains Mono", "monospace";
 
-  --color-nexus-purple: #732adf;
-  --color-nexus-deep: #0c083a;
-  --color-nexus-teal: #65bbbd;
-  --color-nexus-dark: #27342c;
-  --color-nexus-glass: rgba(255, 255, 255, 0.05);
-  --color-nexus-glassBorder: rgba(255, 255, 255, 0.1);
+  --color-nexus-purple: var(--nexus-purple);
+  --color-nexus-deep: var(--nexus-deep);
+  --color-nexus-teal: var(--nexus-teal);
+  --color-nexus-dark: var(--nexus-dark);
+  --color-nexus-glass: var(--nexus-glass);
+  --color-nexus-glassBorder: var(--nexus-glassBorder);
+  --color-foreground: var(--foreground);
+
+  /* Semantic Colors */
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-input-bg: var(--input-bg);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
 
   --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-float: float 6s ease-in-out infinite;
@@ -31,9 +82,10 @@
 }
 
 body {
-  background-color: var(--background);
+  background-color: var(--nexus-deep);
   color: var(--foreground);
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Custom Scrollbar */
@@ -42,10 +94,10 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0c083a;
+  background: var(--nexus-deep);
 }
 ::-webkit-scrollbar-thumb {
-  background: #27342c;
+  background: var(--nexus-dark);
   border-radius: 4px;
 }
 
@@ -54,6 +106,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
   cursor: pointer;
 }
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0);
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #732adf;
+  background: var(--nexus-purple);
 }

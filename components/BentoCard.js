@@ -19,14 +19,14 @@ const BentoCard = ({
     <motion.div
       className={`
         relative group overflow-hidden rounded-3xl 
-        bg-nexus-glass border border-nexus-glassBorder 
+        bg-card-bg border border-card-border 
         backdrop-blur-xl transition-all duration-300 ease-out
         hover:scale-[1.01] hover:shadow-2xl hover:border-nexus-purple/30
         flex flex-col
         ${colSpan} ${rowSpan} ${className}
       `}
       style={{
-        boxShadow: `0 0 0 1px inset rgba(255,255,255,0.05)`,
+        boxShadow: `0 0 0 1px inset var(--card-border)`,
       }}
       {...props}
     >
@@ -56,7 +56,7 @@ const BentoCard = ({
         <div className="flex items-center gap-3 p-5 pb-2 z-10">
           {icon && <div className="text-nexus-teal">{icon}</div>}
           {title && (
-            <h3 className="text-lg font-semibold tracking-wide text-white/90 font-sans">
+            <h3 className="text-lg font-semibold tracking-wide text-text-primary font-sans">
               {title}
             </h3>
           )}

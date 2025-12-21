@@ -94,12 +94,14 @@ const Vault = ({ searchQuery = "" }) => {
       {isAdding ? (
         <div className="flex flex-col gap-3 h-full">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-white">Add Resource</h3>
+            <h3 className="text-sm font-bold text-text-primary">
+              Add Resource
+            </h3>
             <button
               onClick={() => setIsAdding(false)}
-              className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-1 hover:bg-input-bg rounded-lg transition-colors"
             >
-              <X size={16} className="text-gray-400" />
+              <X size={16} className="text-text-secondary" />
             </button>
           </div>
 
@@ -108,7 +110,7 @@ const Vault = ({ searchQuery = "" }) => {
             placeholder="Title (e.g. Project Docs)"
             value={newLink.title}
             onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
-            className="bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors"
+            className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none focus:border-nexus-purple transition-colors"
           />
 
           <input
@@ -116,7 +118,7 @@ const Vault = ({ searchQuery = "" }) => {
             placeholder="URL (https://...)"
             value={newLink.url}
             onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
-            className="bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors"
+            className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none focus:border-nexus-purple transition-colors"
           />
 
           <div className="flex gap-2">
@@ -127,7 +129,7 @@ const Vault = ({ searchQuery = "" }) => {
                 className={`flex-1 flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${
                   newLink.category === cat.id
                     ? "bg-nexus-purple/20 border-nexus-purple text-nexus-purple"
-                    : "bg-white/5 border-transparent text-gray-400 hover:bg-white/10"
+                    : "bg-input-bg border-transparent text-text-secondary hover:bg-card-bg"
                 }`}
               >
                 {cat.icon}
@@ -148,7 +150,7 @@ const Vault = ({ searchQuery = "" }) => {
         <>
           <div className="relative mb-3 shrink-0">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary"
               size={14}
             />
             <input
@@ -156,7 +158,7 @@ const Vault = ({ searchQuery = "" }) => {
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
               placeholder="Filter resources..."
-              className="w-full bg-black/20 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-nexus-teal transition-colors"
+              className="w-full bg-input-bg border border-card-border rounded-lg py-2 pl-9 pr-3 text-xs text-text-primary focus:outline-none focus:border-nexus-teal transition-colors"
             />
           </div>
 
@@ -167,7 +169,7 @@ const Vault = ({ searchQuery = "" }) => {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex flex-col p-3 rounded-xl bg-white/5 border border-white/5 hover:border-nexus-teal/50 transition-all hover:-translate-y-1"
+                className="group relative flex flex-col p-3 rounded-xl bg-input-bg border border-card-border hover:border-nexus-teal/50 transition-all hover:-translate-y-1"
               >
                 <button
                   onClick={(e) => handleDelete(e, item.id)}
@@ -177,12 +179,12 @@ const Vault = ({ searchQuery = "" }) => {
                 </button>
 
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 bg-black/30 rounded-lg group-hover:bg-nexus-teal/20 transition-colors">
+                  <div className="p-2 bg-card-bg rounded-lg group-hover:bg-nexus-teal/20 transition-colors">
                     {getIcon(item.category)}
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-nexus-teal transition-colors" />
+                  <div className="w-2 h-2 rounded-full bg-card-border group-hover:bg-nexus-teal transition-colors" />
                 </div>
-                <span className="text-xs font-medium text-gray-300 group-hover:text-white truncate">
+                <span className="text-xs font-medium text-text-secondary group-hover:text-text-primary truncate">
                   {item.title}
                 </span>
               </a>
@@ -191,7 +193,7 @@ const Vault = ({ searchQuery = "" }) => {
             {/* Add New Button */}
             <button
               onClick={() => setIsAdding(true)}
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-white/10 hover:border-nexus-purple/50 text-gray-500 hover:text-nexus-purple transition-all gap-1 min-h-[80px]"
+              className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-card-border hover:border-nexus-purple/50 text-text-secondary hover:text-nexus-purple transition-all gap-1 min-h-[80px]"
             >
               <Plus size={20} />
               <span className="text-[10px]">Add Resource</span>

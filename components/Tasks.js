@@ -168,9 +168,9 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
     if (task.completed)
       return "text-green-400 decoration-slate-500 line-through";
     const isOverdue = new Date() > task.deadline;
-    if (isOverdue) return "text-red-200";
-    if (task.priority === "high") return "text-amber-200";
-    return "text-white";
+    if (isOverdue) return "text-red-400";
+    if (task.priority === "high") return "text-amber-400";
+    return "text-text-primary";
   };
 
   // --- Filtering & Sorting Logic ---
@@ -254,10 +254,10 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
           task.completed
             ? "bg-green-500/5 border border-green-500/10 opacity-50 hover:opacity-80"
             : isCritical
-            ? "bg-gradient-to-r from-amber-900/20 to-transparent border-l-2 border-l-amber-500 hover:bg-white/5"
+            ? "bg-gradient-to-r from-amber-900/20 to-transparent border-l-2 border-l-amber-500 hover:bg-card-bg"
             : isOverdue
-            ? "bg-gradient-to-r from-red-900/20 to-transparent border-l-2 border-l-red-500 hover:bg-white/5"
-            : "hover:bg-white/5 border border-transparent"
+            ? "bg-gradient-to-r from-red-900/20 to-transparent border-l-2 border-l-red-500 hover:bg-card-bg"
+            : "hover:bg-card-bg border border-transparent"
         }`}
         onClick={() => toggleTask(task.id)}
       >
@@ -271,7 +271,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
           ) : (
             <Circle
               size={18}
-              className="text-gray-500 group-hover:text-nexus-purple"
+              className="text-text-secondary group-hover:text-nexus-purple"
             />
           )}
         </div>
@@ -289,8 +289,8 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                 isOverdue
                   ? "text-red-300"
                   : isCritical
-                  ? "text-amber-300"
-                  : "text-gray-500"
+                  ? "text-amber-500"
+                  : "text-text-secondary"
               }`}
             >
               {task.deadline.toLocaleDateString()}
@@ -342,14 +342,14 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
         {compact ? (
           // Compact Layout (BentoCard)
           <>
-            <div className="bg-black/20 border-b border-white/10 focus-within:border-nexus-purple transition-colors">
+            <div className="bg-input-bg border-b border-card-border focus-within:border-nexus-purple transition-colors">
               <input
                 type="text"
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
                 placeholder="New Mission..."
-                className="w-full bg-transparent px-2 py-2 text-sm text-white focus:outline-none font-mono"
+                className="w-full bg-transparent px-2 py-2 text-sm text-text-primary focus:outline-none font-mono placeholder:text-text-secondary"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -357,7 +357,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                 type="date"
                 value={newDeadline}
                 onChange={(e) => setNewDeadline(e.target.value)}
-                className="flex-1 bg-black/20 border-b border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
+                className="flex-1 bg-input-bg border-b border-card-border px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:border-nexus-purple transition-colors font-mono"
               />
               <button
                 onClick={() => {
@@ -380,14 +380,14 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
         ) : (
           // Standard Layout
           <>
-            <div className="flex items-center bg-black/20 border-b border-white/10 focus-within:border-nexus-purple transition-colors">
+            <div className="flex items-center bg-input-bg border-b border-card-border focus-within:border-nexus-purple transition-colors">
               <input
                 type="text"
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
                 placeholder="New Mission... (use #tag)"
-                className="flex-1 bg-transparent px-2 py-2 text-sm text-white focus:outline-none font-mono"
+                className="flex-1 bg-transparent px-2 py-2 text-sm text-text-primary focus:outline-none font-mono placeholder:text-text-secondary"
               />
               <button
                 onClick={() => {
@@ -400,7 +400,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                 {priorityConfig[newPriority].label}
               </button>
             </div>
-            <div className="flex items-center justify-between gap-2 mt-2 bg-black/20 border border-white/10 rounded focus-within:border-nexus-purple transition-colors p-1">
+            <div className="flex items-center justify-between gap-2 mt-2 bg-input-bg border border-card-border rounded focus-within:border-nexus-purple transition-colors p-1">
               <div className="flex items-center gap-2 flex-1">
                 <div className="relative">
                   <input
@@ -408,7 +408,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                     value={newDeadline}
                     onChange={(e) => setNewDeadline(e.target.value)}
                     style={{ colorScheme: "dark" }}
-                    className="bg-transparent px-2 py-1.5 text-xs text-white focus:outline-none font-mono"
+                    className="bg-transparent px-2 py-1.5 text-xs text-text-primary focus:outline-none font-mono"
                   />
                 </div>
                 <button
@@ -416,7 +416,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                   className={`p-1.5 rounded transition-colors ${
                     showReminderInput
                       ? "text-nexus-purple bg-nexus-purple/10"
-                      : "text-gray-500 hover:text-white"
+                      : "text-text-secondary hover:text-text-primary"
                   }`}
                   title="Set Reminder"
                 >
@@ -428,7 +428,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                     value={newReminder}
                     onChange={(e) => setNewReminder(e.target.value)}
                     style={{ colorScheme: "dark" }}
-                    className="bg-transparent border-l border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none font-mono"
+                    className="bg-transparent border-l border-card-border px-2 py-1.5 text-xs text-text-primary focus:outline-none font-mono"
                   />
                 )}
               </div>
@@ -439,7 +439,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                   className={`p-1.5 rounded transition-colors ${
                     showFilters
                       ? "text-nexus-teal bg-nexus-teal/10"
-                      : "text-gray-500 hover:text-white"
+                      : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   <Filter size={16} />

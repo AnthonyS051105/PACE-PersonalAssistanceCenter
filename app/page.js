@@ -12,6 +12,10 @@ import {
   LayoutGrid,
   Search,
   Palette,
+  Sun,
+  Moon,
+  X,
+  Check,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
@@ -25,7 +29,45 @@ const App = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef(null);
+
+  // Theme & Customization State
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState("dark");
+  const [accentColor, setAccentColor] = useState("nexus");
   const [customizationMode, setCustomizationMode] = useState(false);
+
+  const accentPalette = [
+    { id: "nexus", name: "Nexus", colors: ["#732adf", "#65bbbd"] },
+    { id: "cyber", name: "Cyber", colors: ["#f43f5e", "#06b6d4"] },
+    { id: "forest", name: "Forest", colors: ["#10b981", "#f59e0b"] },
+    { id: "mono", name: "Mono", colors: ["#94a3b8", "#f8fafc"] },
+    { id: "sunset", name: "Sunset", colors: ["#f97316", "#8b5cf6"] },
+  ];
+
+  // Apply Theme
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.removeAttribute("data-theme");
+    } else {
+      root.setAttribute("data-theme", "light");
+    }
+  }, [theme]);
+
+  // Apply Accent Color
+  useEffect(() => {
+    const selected =
+      accentPalette.find((a) => a.id === accentColor) || accentPalette[0];
+    document.documentElement.style.setProperty(
+      "--nexus-purple",
+      selected.colors[0]
+    );
+    document.documentElement.style.setProperty(
+      "--nexus-teal",
+      selected.colors[1]
+    );
+  }, [accentColor]);
+
   const [cardColors, setCardColors] = useState({
     monitor: "#65bbbd",
     ai: "#732adf",
@@ -113,7 +155,7 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-nexus-deep text-white p-4 md:p-8 font-sans selection:bg-nexus-purple selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-nexus-deep text-foreground p-4 md:p-8 font-sans selection:bg-nexus-purple selection:text-white relative overflow-x-hidden">
       {/* Background Ambience */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-nexus-purple/20 rounded-full blur-[120px] animate-pulse-slow" />
@@ -149,10 +191,10 @@ const App = () => {
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-nexus-deep" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-white via-nexus-teal to-nexus-purple">
+              <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-text-primary via-nexus-teal to-nexus-purple">
                 PACE
               </h1>
-              <p className="text-[10px] text-gray-400 font-mono tracking-[0.2em] uppercase">
+              <p className="text-[10px] text-text-secondary font-mono tracking-[0.2em] uppercase">
                 Personal Assistance Center
               </p>
             </div>
@@ -164,7 +206,7 @@ const App = () => {
             className="flex-1 max-w-md mx-4 relative hidden md:block group"
           >
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-nexus-teal transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-nexus-teal transition-colors"
               size={16}
             />
             <input
@@ -173,10 +215,10 @@ const App = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search ACE..."
-              className="w-full bg-nexus-glass border border-nexus-glassBorder rounded-xl py-2.5 pl-10 pr-12 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-nexus-teal transition-all"
+              className="w-full bg-input-bg border border-card-border rounded-xl py-2.5 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-nexus-teal transition-all"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-              <span className="text-[10px] font-mono text-gray-600 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+              <span className="text-[10px] font-mono text-text-secondary bg-card-bg px-1.5 py-0.5 rounded border border-card-border">
                 ⌘K
               </span>
             </div>
@@ -187,7 +229,7 @@ const App = () => {
             variants={itemVariants}
             className="flex items-center gap-4"
           >
-            <div className="flex items-center gap-2 bg-nexus-glass border border-nexus-glassBorder rounded-full p-1 backdrop-blur-md">
+            <div className="flex items-center gap-2 bg-card-bg border border-card-border rounded-full p-1 backdrop-blur-md">
               {["dashboard", "calendar", "tasks"].map((tab) => (
                 <button
                   key={tab}
@@ -196,8 +238,8 @@ const App = () => {
                       px-4 py-2 rounded-full text-xs font-medium transition-all
                       ${
                         activeTab === tab
-                          ? "bg-white/10 text-white shadow-inner"
-                          : "text-gray-400 hover:text-white"
+                          ? "bg-input-bg text-text-primary shadow-inner"
+                          : "text-text-secondary hover:text-text-primary"
                       }
                    `}
                 >
@@ -206,17 +248,147 @@ const App = () => {
               ))}
             </div>
 
-            <button
-              onClick={() => setCustomizationMode(!customizationMode)}
-              className={`p-2 rounded-full transition-all ${
-                customizationMode
-                  ? "bg-nexus-purple text-white shadow-[0_0_15px_rgba(115,42,223,0.5)]"
-                  : "bg-nexus-glass border border-nexus-glassBorder text-gray-400 hover:text-white"
-              }`}
-              title="Customize Glow Colors"
-            >
-              <Palette size={18} />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-2 rounded-full transition-all ${
+                  showSettings || customizationMode
+                    ? "bg-nexus-purple text-white shadow-[0_0_15px_rgba(115,42,223,0.5)]"
+                    : "bg-nexus-glass border border-nexus-glassBorder text-gray-400 hover:text-white"
+                }`}
+                title="Customize Theme"
+              >
+                <Palette size={18} />
+              </button>
+
+              <AnimatePresence>
+                {showSettings && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-2 w-72 bg-nexus-deep/95 backdrop-blur-xl border border-nexus-glassBorder rounded-xl p-4 shadow-2xl z-50"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold text-white">
+                        Appearance
+                      </h3>
+                      <button
+                        onClick={() => setShowSettings(false)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+
+                    {/* Theme Toggle */}
+                    <div className="mb-4">
+                      <label className="text-xs text-gray-400 mb-2 block">
+                        Theme Mode
+                      </label>
+                      <div className="flex bg-nexus-glass rounded-lg p-1 border border-nexus-glassBorder">
+                        <button
+                          onClick={() => setTheme("light")}
+                          className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${
+                            theme === "light"
+                              ? "bg-white text-nexus-deep shadow-sm"
+                              : "text-text-secondary hover:text-text-primary"
+                          }`}
+                        >
+                          <Sun size={14} /> Light
+                        </button>
+                        <button
+                          onClick={() => setTheme("dark")}
+                          className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all ${
+                            theme === "dark"
+                              ? "bg-nexus-purple text-white shadow-sm"
+                              : "text-text-secondary hover:text-text-primary"
+                          }`}
+                        >
+                          <Moon size={14} /> Dark
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Accent Color */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Palette size={14} className="text-text-secondary" />
+                        <label className="text-xs font-bold text-text-secondary tracking-widest uppercase">
+                          Neural Interface Accents
+                        </label>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        {accentPalette.map((accent) => (
+                          <button
+                            key={accent.id}
+                            onClick={() => setAccentColor(accent.id)}
+                            className={`relative flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-300 ${
+                              accentColor === accent.id
+                                ? "bg-white/5 border-nexus-purple shadow-[0_0_15px_rgba(115,42,223,0.3)]"
+                                : "bg-transparent border-white/5 hover:border-white/20 hover:bg-white/5"
+                            }`}
+                          >
+                            {/* Color Circles */}
+                            <div className="relative w-6 h-4">
+                              <div
+                                className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-sm z-10"
+                                style={{ backgroundColor: accent.colors[0] }}
+                              />
+                              <div
+                                className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-sm"
+                                style={{ backgroundColor: accent.colors[1] }}
+                              />
+                            </div>
+
+                            <span
+                              className={`text-xs font-medium ${
+                                accentColor === accent.id
+                                  ? "text-white"
+                                  : "text-text-secondary"
+                              }`}
+                            >
+                              {accent.name}
+                            </span>
+
+                            {/* Active Indicator */}
+                            {accentColor === accent.id && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-nexus-teal rounded-full border border-nexus-deep flex items-center justify-center">
+                                <Check
+                                  size={8}
+                                  className="text-nexus-deep"
+                                  strokeWidth={4}
+                                />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Card Glow Toggle */}
+                    <div>
+                      <label className="text-xs text-text-secondary mb-2 block">
+                        Card Customization
+                      </label>
+                      <button
+                        onClick={() => setCustomizationMode(!customizationMode)}
+                        className={`w-full py-2 rounded-lg text-xs font-bold border transition-all ${
+                          customizationMode
+                            ? "bg-nexus-purple/20 border-nexus-purple text-nexus-purple"
+                            : "bg-input-bg border-card-border text-text-secondary hover:text-text-primary"
+                        }`}
+                      >
+                        {customizationMode
+                          ? "Done Customizing"
+                          : "Edit Card Glows"}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* User Avatar */}
             <div className="w-10 h-10 rounded-full bg-linear-to-tr from-nexus-purple to-nexus-teal flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform">

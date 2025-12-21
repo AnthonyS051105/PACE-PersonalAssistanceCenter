@@ -26,7 +26,10 @@ const Agenda = () => {
       {/* Mini Calendar Visual */}
       <div className="grid grid-cols-7 gap-1 text-center mb-6">
         {days.map((d) => (
-          <div key={d} className="text-[10px] text-gray-500 font-mono mb-2">
+          <div
+            key={d}
+            className="text-[10px] text-text-secondary font-mono mb-2"
+          >
             {d}
           </div>
         ))}
@@ -38,7 +41,7 @@ const Agenda = () => {
               ${
                 i + 1 === today
                   ? "bg-nexus-purple text-white shadow-lg shadow-nexus-purple/50"
-                  : "text-gray-400 hover:bg-white/10"
+                  : "text-text-secondary hover:bg-input-bg"
               }
             `}
           >
@@ -47,10 +50,10 @@ const Agenda = () => {
         ))}
       </div>
 
-      <div className="h-px w-full bg-white/10 mb-4" />
+      <div className="h-px w-full bg-card-border mb-4" />
 
       {/* Agenda List */}
-      <h4 className="text-xs uppercase tracking-widest text-gray-500 mb-3 font-bold">
+      <h4 className="text-xs uppercase tracking-widest text-text-secondary mb-3 font-bold">
         Today's Timeline
       </h4>
       <div className="space-y-3 flex-1 overflow-y-auto">
@@ -60,14 +63,14 @@ const Agenda = () => {
             className="relative pl-4 border-l-2 border-nexus-teal/30"
           >
             <div className="absolute -left-1.25 top-0 w-2 h-2 rounded-full bg-nexus-teal shadow-[0_0_8px_#65BBBD]" />
-            <h5 className="text-sm font-semibold text-gray-200">
+            <h5 className="text-sm font-semibold text-text-primary">
               {event.title}
             </h5>
             <span className="text-xs text-nexus-purple font-mono">
               10:00 AM - 11:30 AM
             </span>
             <div className="mt-1">
-              <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400">
+              <span className="text-[10px] bg-input-bg px-2 py-0.5 rounded text-text-secondary">
                 {event.type}
               </span>
             </div>
@@ -75,8 +78,10 @@ const Agenda = () => {
         ))}
 
         {/* Empty State / Interactive Object Placeholder */}
-        <div className="mt-4 p-4 border border-dashed border-white/10 rounded-xl text-center">
-          <span className="text-xs text-gray-600 block">No more events</span>
+        <div className="mt-4 p-4 border border-dashed border-card-border rounded-xl text-center">
+          <span className="text-xs text-text-secondary block">
+            No more events
+          </span>
           <button className="text-[10px] text-nexus-purple mt-2 hover:underline">
             + Add Event
           </button>

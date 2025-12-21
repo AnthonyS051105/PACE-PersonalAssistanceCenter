@@ -27,11 +27,16 @@ const AIChat = () => {
   ];
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const handleSend = async (text = input) => {
@@ -80,10 +85,10 @@ const AIChat = () => {
               />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-1">
+              <h3 className="text-xl font-bold text-text-primary mb-1">
                 A.C.E Online
               </h3>
-              <p className="text-xs text-gray-400 max-w-[200px] mx-auto">
+              <p className="text-xs text-text-secondary max-w-[200px] mx-auto">
                 System ready. Awaiting the input for processing.
               </p>
             </div>
@@ -92,7 +97,7 @@ const AIChat = () => {
                 <button
                   key={i}
                   onClick={() => handleSend(s.text)}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-nexus-purple/30 transition-all text-xs text-gray-300 hover:text-white text-left group"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-input-bg hover:bg-card-bg border border-card-border hover:border-nexus-purple/30 transition-all text-xs text-text-secondary hover:text-text-primary text-left group"
                 >
                   <div className="p-1.5 rounded-lg bg-nexus-deep text-nexus-purple group-hover:text-nexus-teal transition-colors">
                     {s.icon}
@@ -117,7 +122,7 @@ const AIChat = () => {
                 ${
                   msg.role === "user"
                     ? "bg-nexus-purple text-white rounded-br-none"
-                    : "bg-nexus-dark/50 border border-white/10 text-gray-200 rounded-bl-none"
+                    : "bg-input-bg border border-card-border text-text-primary rounded-bl-none"
                 }
               `}
                 >
@@ -149,17 +154,17 @@ const AIChat = () => {
                           />
                         ),
                         li: ({ node, ...props }) => (
-                          <li className="text-gray-200 pl-1" {...props} />
+                          <li className="text-text-primary pl-1" {...props} />
                         ),
                         blockquote: ({ node, ...props }) => (
-                          <blockquote className="border-l-4 border-nexus-purple bg-white/5 p-3 my-4 rounded-r-lg relative">
+                          <blockquote className="border-l-4 border-nexus-purple bg-input-bg p-3 my-4 rounded-r-lg relative">
                             <div className="flex gap-2">
                               <Quote
                                 size={16}
                                 className="text-nexus-purple shrink-0 mt-1"
                               />
                               <div
-                                className="italic text-gray-300"
+                                className="italic text-text-secondary"
                                 {...props}
                               />
                             </div>
@@ -167,7 +172,7 @@ const AIChat = () => {
                         ),
                         hr: ({ node, ...props }) => (
                           <hr
-                            className="border-t border-white/10 my-6"
+                            className="border-t border-card-border my-6"
                             {...props}
                           />
                         ),
@@ -178,11 +183,14 @@ const AIChat = () => {
                           />
                         ),
                         em: ({ node, ...props }) => (
-                          <em className="italic text-gray-300" {...props} />
+                          <em
+                            className="italic text-text-secondary"
+                            {...props}
+                          />
                         ),
                         a: ({ node, ...props }) => (
                           <a
-                            className="text-nexus-teal underline hover:text-white transition-colors"
+                            className="text-nexus-teal underline hover:text-text-primary transition-colors"
                             target="_blank"
                             rel="noopener noreferrer"
                             {...props}
