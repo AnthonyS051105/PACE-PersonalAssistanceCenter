@@ -13,15 +13,7 @@ import {
 } from "lucide-react";
 import { summarizeNotes } from "../lib/geminiService";
 
-const Notes = ({ searchQuery = "" }) => {
-  const [content, setContent] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("nexus_notes_content");
-      if (saved) return saved;
-    }
-    return "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$";
-  });
-
+const Notes = ({ searchQuery = "", content, setContent }) => {
   const contentRef = useRef(content);
   const [lastSaved, setLastSaved] = useState(null);
 

@@ -11,25 +11,10 @@ import {
   Search,
 } from "lucide-react";
 
-const Vault = ({ searchQuery = "" }) => {
-  const defaultItems = [
-    { id: "1", title: "Calculus Syllabus", url: "#", category: "doc" },
-    { id: "2", title: "React Crash Course", url: "#", category: "youtube" },
-    { id: "3", title: "Project Drive", url: "#", category: "drive" },
-    { id: "4", title: "Design System", url: "#", category: "other" },
-  ];
-
-  const [links, setLinks] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("vault_links");
-      if (saved) return JSON.parse(saved);
-    }
-    return defaultItems;
-  });
-
+const Vault = ({ searchQuery = "", items = [], setItems }) => {
   const [localSearch, setLocalSearch] = useState("");
 
-  const filteredLinks = links.filter((link) => {
+  const filteredLinks = items.filter((link) => {
     const matchesGlobal = link.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -46,9 +31,14 @@ const Vault = ({ searchQuery = "" }) => {
     category: "other",
   });
 
+  // Persist to localStorage whenever items change (handled in parent or here if we want)
+  // But since we are lifting state, the parent should handle persistence or we can do it here via useEffect on the prop
+  // Let's assume parent handles persistence for simplicity or we keep the effect here but on 'items'
   useEffect(() => {
-    localStorage.setItem("vault_links", JSON.stringify(links));
-  }, [links]);
+    if (items.length > 0) {
+       localStorage.setItem("vault_links", JSON.stringify(items));
+    }
+  }, [items]);
 
   const handleAdd = () => {
     if (!newLink.title || !newLink.url) return;
@@ -58,7 +48,7 @@ const Vault = ({ searchQuery = "" }) => {
       ...newLink,
     };
 
-    setLinks([...links, item]);
+    setItems([...items, item]);
     setNewLink({ title: "", url: "", category: "other" });
     setIsAdding(false);
   };
@@ -66,7 +56,7 @@ const Vault = ({ searchQuery = "" }) => {
   const handleDelete = (e, id) => {
     e.preventDefault(); // Prevent link navigation
     e.stopPropagation();
-    setLinks(links.filter((l) => l.id !== id));
+    setItems(items.filter((l) => l.id !== id));
   };
 
   const getIcon = (cat) => {

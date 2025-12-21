@@ -1,42 +1,34 @@
 import React from "react";
 
-const Agenda = () => {
-  const events = [
-    {
-      id: "1",
-      title: "Web Dev Lecture",
-      startTime: new Date(),
-      endTime: new Date(),
-      type: "lecture",
-    },
-    {
-      id: "2",
-      title: "Team Meeting",
-      startTime: new Date(),
-      endTime: new Date(),
-      type: "meeting",
-    },
-  ];
-
+const Agenda = ({ searchQuery = "", events = [] }) => {
   const days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   const today = new Date().getDate();
 
+  // Filter events based on search query
+  const filteredEvents = events.filter(
+    (event) =>
+      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col h-full">
-      {/* Mini Calendar Visual */}
-      <div className="grid grid-cols-7 gap-1 text-center mb-6">
-        {days.map((d) => (
-          <div
-            key={d}
-            className="text-[10px] text-text-secondary font-mono mb-2"
-          >
-            {d}
-          </div>
-        ))}
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div
-            key={i}
-            className={`
+      {/* Mini Calendar Visual - Hide when searching to focus on results */}
+      {!searchQuery && (
+        <>
+          <div className="grid grid-cols-7 gap-1 text-center mb-6">
+            {days.map((d) => (
+              <div
+                key={d}
+                className="text-[10px] text-text-secondary font-mono mb-2"
+              >
+                {d}
+              </div>
+            ))}
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div
+                key={i}
+                className={`
               h-6 w-6 flex items-center justify-center text-xs rounded-full mx-auto
               ${
                 i + 1 === today
@@ -44,48 +36,57 @@ const Agenda = () => {
                   : "text-text-secondary hover:bg-input-bg"
               }
             `}
-          >
-            {i + 1}
+              >
+                {i + 1}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-
-      <div className="h-px w-full bg-card-border mb-4" />
+          <div className="h-px w-full bg-card-border mb-4" />
+        </>
+      )}
 
       {/* Agenda List */}
       <h4 className="text-xs uppercase tracking-widest text-text-secondary mb-3 font-bold">
-        Today's Timeline
+        {searchQuery ? "Search Results" : "Today's Timeline"}
       </h4>
       <div className="space-y-3 flex-1 overflow-y-auto">
-        {events.map((event) => (
-          <div
-            key={event.id}
-            className="relative pl-4 border-l-2 border-nexus-teal/30"
-          >
-            <div className="absolute -left-1.25 top-0 w-2 h-2 rounded-full bg-nexus-teal shadow-[0_0_8px_#65BBBD]" />
-            <h5 className="text-sm font-semibold text-text-primary">
-              {event.title}
-            </h5>
-            <span className="text-xs text-nexus-purple font-mono">
-              10:00 AM - 11:30 AM
-            </span>
-            <div className="mt-1">
-              <span className="text-[10px] bg-input-bg px-2 py-0.5 rounded text-text-secondary">
-                {event.type}
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
+            <div
+              key={event.id}
+              className="relative pl-4 border-l-2 border-nexus-teal/30"
+            >
+              <div className="absolute -left-1.25 top-0 w-2 h-2 rounded-full bg-nexus-teal shadow-[0_0_8px_#65BBBD]" />
+              <h5 className="text-sm font-semibold text-text-primary">
+                {event.title}
+              </h5>
+              <span className="text-xs text-nexus-purple font-mono">
+                10:00 AM - 11:30 AM
               </span>
+              <div className="mt-1">
+                <span className="text-[10px] bg-input-bg px-2 py-0.5 rounded text-text-secondary">
+                  {event.type}
+                </span>
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-text-secondary text-xs">
+            No events found matching "{searchQuery}"
           </div>
-        ))}
+        )}
 
         {/* Empty State / Interactive Object Placeholder */}
-        <div className="mt-4 p-4 border border-dashed border-card-border rounded-xl text-center">
-          <span className="text-xs text-text-secondary block">
-            No more events
-          </span>
-          <button className="text-[10px] text-nexus-purple mt-2 hover:underline">
-            + Add Event
-          </button>
-        </div>
+        {!searchQuery && (
+          <div className="mt-4 p-4 border border-dashed border-card-border rounded-xl text-center">
+            <span className="text-xs text-text-secondary block">
+              No more events
+            </span>
+            <button className="text-[10px] text-nexus-purple mt-2 hover:underline">
+              + Add Event
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -16,6 +16,8 @@ import {
   Moon,
   X,
   Check,
+  FileText,
+  Link as LinkIcon,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
@@ -139,6 +141,122 @@ const App = () => {
     },
   ]);
 
+  // Lifted State for Search
+  const [events, setEvents] = useState([
+    {
+      id: "1",
+      title: "Web Dev Lecture",
+      startTime: new Date(),
+      endTime: new Date(),
+      type: "lecture",
+    },
+    {
+      id: "2",
+      title: "Team Meeting",
+      startTime: new Date(),
+      endTime: new Date(),
+      type: "meeting",
+    },
+  ]);
+
+  const [vaultItems, setVaultItems] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("vault_links");
+      if (saved) return JSON.parse(saved);
+    }
+    return [
+      { id: "1", title: "Calculus Syllabus", url: "#", category: "doc" },
+      { id: "2", title: "React Crash Course", url: "#", category: "youtube" },
+      { id: "3", title: "Project Drive", url: "#", category: "drive" },
+      { id: "4", title: "Design System", url: "#", category: "other" },
+    ];
+  });
+
+  const [noteContent, setNoteContent] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nexus_notes_content");
+      if (saved) return saved;
+    }
+    return "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$";
+  });
+
+  // Search Logic
+  const [searchResults, setSearchResults] = useState([]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const results = [];
+
+    // Search Tasks
+    tasks.forEach((task) => {
+      if (task.title.toLowerCase().includes(query)) {
+        results.push({
+          type: "task",
+          title: task.title,
+          id: task.id,
+          data: task,
+        });
+      }
+    });
+
+    // Search Events
+    events.forEach((event) => {
+      if (event.title.toLowerCase().includes(query)) {
+        results.push({
+          type: "event",
+          title: event.title,
+          id: event.id,
+          data: event,
+        });
+      }
+    });
+
+    // Search Vault
+    vaultItems.forEach((item) => {
+      if (item.title.toLowerCase().includes(query)) {
+        results.push({
+          type: "vault",
+          title: item.title,
+          id: item.id,
+          data: item,
+        });
+      }
+    });
+
+    // Search Notes (Simple check)
+    if (noteContent.toLowerCase().includes(query)) {
+      results.push({
+        type: "note",
+        title: "Note Content Match",
+        id: "note-main",
+        data: null,
+      });
+    }
+
+    setSearchResults(results);
+  }, [searchQuery, tasks, events, vaultItems, noteContent]);
+
+  const handleSearchResultClick = (result) => {
+    setSearchQuery(""); // Clear search or keep it? Usually clear on navigation.
+
+    if (result.type === "task") {
+      setActiveTab("tasks");
+    } else if (result.type === "event") {
+      setActiveTab("calendar");
+    } else if (result.type === "vault") {
+      setActiveTab("dashboard");
+      // Ideally scroll to vault card
+    } else if (result.type === "note") {
+      setActiveTab("dashboard");
+      // Ideally scroll to notes card
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -217,11 +335,60 @@ const App = () => {
               placeholder="Search ACE..."
               className="w-full bg-input-bg border border-card-border rounded-xl py-2.5 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-nexus-teal transition-all"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-              <span className="text-[10px] font-mono text-text-secondary bg-card-bg px-1.5 py-0.5 rounded border border-card-border">
-                ⌘K
-              </span>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {searchQuery ? (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="p-1 hover:bg-card-bg rounded-full text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              ) : (
+                <span className="text-[10px] font-mono text-text-secondary bg-card-bg px-1.5 py-0.5 rounded border border-card-border pointer-events-none">
+                  ⌘K
+                </span>
+              )}
             </div>
+
+            {/* Search Results Dropdown */}
+            <AnimatePresence>
+              {searchQuery && searchResults.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-nexus-deep/95 backdrop-blur-xl border border-nexus-glassBorder rounded-xl shadow-2xl overflow-hidden z-50 max-h-[300px] overflow-y-auto"
+                >
+                  <div className="p-2">
+                    <div className="text-[10px] font-bold text-text-secondary uppercase tracking-wider px-2 py-1 mb-1">
+                      Best Matches
+                    </div>
+                    {searchResults.map((result) => (
+                      <button
+                        key={`${result.type}-${result.id}`}
+                        onClick={() => handleSearchResultClick(result)}
+                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-left group"
+                      >
+                        <div className="p-2 rounded-lg bg-input-bg text-nexus-teal group-hover:bg-nexus-teal group-hover:text-nexus-deep transition-colors">
+                          {result.type === "task" && <CheckSquare size={14} />}
+                          {result.type === "event" && <Calendar size={14} />}
+                          {result.type === "vault" && <LinkIcon size={14} />}
+                          {result.type === "note" && <FileText size={14} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-text-primary truncate">
+                            {result.title}
+                          </div>
+                          <div className="text-[10px] text-text-secondary capitalize">
+                            {result.type}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Right Side: Tabs + User */}
@@ -482,7 +649,11 @@ const App = () => {
                   onColorChange={(c) => handleColorChange("vault", c)}
                   className="h-[500px]"
                 >
-                  <Vault searchQuery={searchQuery} />
+                  <Vault
+                    searchQuery={searchQuery}
+                    items={vaultItems}
+                    setItems={setVaultItems}
+                  />
                 </BentoCard>
 
                 {/* 4. Agenda (Tall) */}
@@ -498,7 +669,7 @@ const App = () => {
                   onColorChange={(c) => handleColorChange("agenda", c)}
                   className="h-[500px]"
                 >
-                  <Agenda />
+                  <Agenda searchQuery={searchQuery} events={events} />
                 </BentoCard>
 
                 {/* 5. Notes (Wide, Tall) */}
@@ -514,7 +685,11 @@ const App = () => {
                   onColorChange={(c) => handleColorChange("notes", c)}
                   className="h-[500px]"
                 >
-                  <Notes searchQuery={searchQuery} />
+                  <Notes
+                    searchQuery={searchQuery}
+                    content={noteContent}
+                    setContent={setNoteContent}
+                  />
                 </BentoCard>
               </motion.div>
             )}
@@ -533,7 +708,7 @@ const App = () => {
                   Full Timeline
                 </h2>
                 <div className="flex-1 overflow-hidden">
-                  <Agenda />
+                  <Agenda searchQuery={searchQuery} events={events} />
                 </div>
               </motion.div>
             )}
