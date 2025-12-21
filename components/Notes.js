@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Download,
   Image as ImageIcon,
@@ -9,13 +9,51 @@ import {
   LayoutTemplate,
   ChevronDown,
   Archive,
+  Save,
 } from "lucide-react";
 import { summarizeNotes } from "../lib/geminiService";
 
 const Notes = ({ searchQuery = "" }) => {
-  const [content, setContent] = useState(
-    "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$"
-  );
+  const [content, setContent] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nexus_notes_content");
+      if (saved) return saved;
+    }
+    return "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$";
+  });
+
+  const contentRef = useRef(content);
+  const [lastSaved, setLastSaved] = useState(null);
+
+  // Update ref whenever content changes
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
+
+  // Auto-save logic
+  useEffect(() => {
+    const saveContent = () => {
+      localStorage.setItem("nexus_notes_content", contentRef.current);
+      setLastSaved(new Date());
+    };
+
+    // Save every 30 seconds
+    const interval = setInterval(saveContent, 30000);
+
+    // Save on unmount or page reload
+    const handleBeforeUnload = () => {
+      saveContent();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      saveContent(); // Save on component unmount
+    };
+  }, []);
+
   const hasMatch =
     searchQuery && content.toLowerCase().includes(searchQuery.toLowerCase());
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -189,7 +227,13 @@ const Notes = ({ searchQuery = "" }) => {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {lastSaved && (
+            <div className="flex items-center gap-1 text-[10px] text-gray-500 mr-2">
+              <Save size={12} />
+              <span>{lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            </div>
+          )}
           <button
             onClick={handleArchive}
             className="flex items-center gap-1 text-[10px] bg-nexus-deep border border-nexus-teal/30 text-nexus-teal px-2 py-1 rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all"
