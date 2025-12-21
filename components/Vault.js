@@ -36,7 +36,7 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
   // Let's assume parent handles persistence for simplicity or we keep the effect here but on 'items'
   useEffect(() => {
     if (items.length > 0) {
-       localStorage.setItem("vault_links", JSON.stringify(items));
+      localStorage.setItem("vault_links", JSON.stringify(items));
     }
   }, [items]);
 

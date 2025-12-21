@@ -118,6 +118,7 @@ const App = () => {
     {
       id: "1",
       title: "Complete Project Report",
+      description: "Finalize the introduction and methodology sections. Ensure all citations are in APA format.",
       deadline: new Date(Date.now() + 86400000),
       completed: false,
       priority: "high",
@@ -126,6 +127,7 @@ const App = () => {
     {
       id: "2",
       title: "Review Calculus III",
+      description: "Go through Chapter 5: Multiple Integrals. Solve practice problems 1-10.",
       deadline: new Date(Date.now() - 86400000),
       completed: false,
       priority: "medium",
@@ -134,6 +136,7 @@ const App = () => {
     {
       id: "3",
       title: "Buy Groceries",
+      description: "Milk, Eggs, Bread, Chicken Breast, Broccoli, Rice.",
       deadline: new Date(Date.now() + 172800000),
       completed: true,
       priority: "low",

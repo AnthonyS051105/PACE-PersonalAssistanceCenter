@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   CheckCircle2,
   Circle,
@@ -16,10 +17,20 @@ import {
   Calendar as CalendarIcon,
   ListFilter,
   X,
+  Trash2,
+  AlignLeft,
+  Tag,
 } from "lucide-react";
 
 const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
+  const [mounted, setMounted] = useState(false);
   const [newTask, setNewTask] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
   const [newReminder, setNewReminder] = useState("");
@@ -31,6 +42,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
   const [sortBy, setSortBy] = useState(null); // deadline, priority
   const [sortOrder, setSortOrder] = useState("asc"); // asc, desc
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
 
   // Request Notification Permission
   useEffect(() => {
@@ -130,6 +142,13 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
     setTasks(
       tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     );
+  };
+
+  const deleteTask = (id) => {
+    if (window.confirm("Are you sure you want to delete this mission?")) {
+      setTasks(tasks.filter((t) => t.id !== id));
+      if (selectedTaskId === id) setSelectedTaskId(null);
+    }
   };
 
   const addTask = () => {
@@ -259,9 +278,15 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
             ? "bg-gradient-to-r from-red-900/20 to-transparent border-l-2 border-l-red-500 hover:bg-card-bg"
             : "hover:bg-card-bg border border-transparent"
         }`}
-        onClick={() => toggleTask(task.id)}
+        onClick={() => setSelectedTaskId(task.id)}
       >
-        <div className="transform transition-transform duration-200 hover:scale-110 active:scale-95">
+        <div
+          className="transform transition-transform duration-200 hover:scale-110 active:scale-95"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleTask(task.id);
+          }}
+        >
           {task.completed ? (
             <CheckCircle2 size={18} className="text-nexus-teal" />
           ) : isCritical ? (
@@ -554,7 +579,147 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
       )}
 
       {/* Task List */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-4 pr-1 relative">
+        {/* Detail View Modal */}
+        {selectedTaskId && mounted && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            {(() => {
+              const task = tasks.find((t) => t.id === selectedTaskId);
+              if (!task) return null;
+              const pConfig = priorityConfig[task.priority];
+
+              return (
+                <div className="w-full max-w-2xl bg-nexus-deep border border-nexus-glassBorder rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                  {/* Header */}
+                  <div className="flex items-start justify-between p-6 border-b border-white/5">
+                    <h3 className="text-2xl font-bold text-white leading-tight">
+                      {task.title}
+                    </h3>
+                    <button
+                      onClick={() => setSelectedTaskId(null)}
+                      className="p-2 hover:bg-white/10 rounded-full text-text-secondary hover:text-white transition-colors"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {/* Badges Row */}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border uppercase tracking-wider ${pConfig.bg} ${pConfig.color} ${pConfig.border}`}
+                      >
+                        {pConfig.icon}
+                        {pConfig.label} Priority
+                      </span>
+                      <span
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border uppercase tracking-wider ${
+                          task.completed
+                            ? "bg-green-500/20 text-green-400 border-green-500/30"
+                            : "bg-white/5 text-text-secondary border-white/10"
+                        }`}
+                      >
+                        <Circle size={10} className={task.completed ? "fill-current" : ""} />
+                        {task.completed ? "Completed" : "Pending"}
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <div className="bg-input-bg rounded-xl p-4 border border-card-border">
+                      <div className="flex items-center gap-2 mb-3 text-text-secondary">
+                        <AlignLeft size={16} />
+                        <h4 className="text-xs font-bold uppercase tracking-wider">
+                          Description
+                        </h4>
+                      </div>
+                      <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed pl-6">
+                        {task.description || "No description provided for this mission."}
+                      </p>
+                    </div>
+
+                    {/* Meta Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Deadline Box */}
+                      <div className="bg-input-bg rounded-xl p-4 border border-card-border">
+                        <div className="flex items-center gap-2 mb-2 text-text-secondary">
+                          <CalendarIcon size={16} />
+                          <h4 className="text-xs font-bold uppercase tracking-wider">
+                            Deadline
+                          </h4>
+                        </div>
+                        <div className="text-lg font-mono text-white pl-6">
+                          {task.deadline.toLocaleDateString()},{" "}
+                          {task.deadline.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Tags Box */}
+                      <div className="bg-input-bg rounded-xl p-4 border border-card-border">
+                        <div className="flex items-center gap-2 mb-2 text-text-secondary">
+                          <Tag size={16} />
+                          <h4 className="text-xs font-bold uppercase tracking-wider">
+                            Tags
+                          </h4>
+                        </div>
+                        <div className="flex flex-wrap gap-2 pl-6">
+                          {task.tags && task.tags.length > 0 ? (
+                            task.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-2.5 py-1 rounded-md text-xs font-medium bg-nexus-purple/20 text-nexus-purple border border-nexus-purple/30"
+                              >
+                                #{tag}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-text-secondary italic">
+                              No tags
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div className="p-6 border-t border-white/5 bg-black/20 flex gap-3">
+                    <button
+                      onClick={() => toggleTask(task.id)}
+                      className={`flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
+                        task.completed
+                          ? "bg-green-600 hover:bg-green-500 text-white shadow-green-900/20"
+                          : "bg-nexus-teal hover:bg-white hover:text-nexus-deep text-nexus-deep shadow-nexus-teal/20"
+                      }`}
+                    >
+                      {task.completed ? (
+                        <>
+                          <CheckCircle2 size={18} /> Mission Completed
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={18} /> Complete Mission
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      className="px-5 py-3 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors flex items-center justify-center"
+                      title="Delete Mission"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>,
+          document.body
+        )}
+
         {sortBy ? (
           // Unified List when Sorting
           <div className="space-y-2">
