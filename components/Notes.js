@@ -1,10 +1,31 @@
 import React, { useState } from "react";
-import { Download, Image as ImageIcon, FileText, Code } from "lucide-react";
+import {
+  Download,
+  Image as ImageIcon,
+  FileText,
+  Code,
+  Sparkles,
+} from "lucide-react";
+import { summarizeNotes } from "../lib/geminiService";
 
 const Notes = () => {
   const [content, setContent] = useState(
     "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$"
   );
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
+  const handleSummarize = async () => {
+    if (!content.trim()) return;
+    setIsSummarizing(true);
+    try {
+      const summary = await summarizeNotes(content);
+      setContent((prev) => prev + "\n\n### AI Summary\n" + summary);
+    } catch (error) {
+      console.error("Summarization failed", error);
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
 
   const handleExport = () => {
     // Mock PDF export
@@ -21,7 +42,16 @@ const Notes = () => {
   return (
     <div className="flex flex-col h-full relative">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={handleSummarize}
+            disabled={isSummarizing}
+            className="flex items-center gap-2 text-xs font-bold text-nexus-purple hover:text-nexus-purple/80 transition-colors mr-2"
+          >
+            <Sparkles size={14} />
+            {isSummarizing ? "SUMMARIZING..." : "AI SUMMARIZE"}
+          </button>
+          <div className="w-px h-4 bg-white/10 mx-1"></div>
           <button
             className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors"
             title="Insert Image"
