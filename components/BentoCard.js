@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Palette } from "lucide-react";
 
 const BentoCard = ({
   children,
@@ -9,6 +10,9 @@ const BentoCard = ({
   glowColor = "rgba(115, 42, 223, 0.5)", // Default purple
   colSpan = "col-span-1",
   rowSpan = "row-span-1",
+  isCustomizing = false,
+  pickerColor = "#732adf",
+  onColorChange,
   ...props
 }) => {
   return (
@@ -31,6 +35,21 @@ const BentoCard = ({
         className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
         style={{ background: glowColor }}
       />
+
+      {/* Customization Overlay */}
+      {isCustomizing && (
+        <div className="absolute top-4 right-4 z-50">
+          <div className="relative p-2 bg-black/50 rounded-full hover:bg-white/20 transition-colors text-white border border-white/10 shadow-lg backdrop-blur-md cursor-pointer">
+            <Palette size={16} />
+            <input
+              type="color"
+              value={pickerColor}
+              onChange={(e) => onColorChange && onColorChange(e.target.value)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       {(title || icon) && (

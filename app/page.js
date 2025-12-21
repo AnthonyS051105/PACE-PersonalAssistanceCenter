@@ -11,6 +11,7 @@ import {
   Cpu,
   LayoutGrid,
   Search,
+  Palette,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
@@ -24,6 +25,34 @@ const App = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef(null);
+  const [customizationMode, setCustomizationMode] = useState(false);
+  const [cardColors, setCardColors] = useState({
+    monitor: "#65bbbd",
+    ai: "#732adf",
+    tasks: "#ff6464",
+    vault: "#732adf",
+    agenda: "#65bbbd",
+    notes: "#ffffff",
+  });
+
+  const hexToRgba = (hex, alpha = 0.3) => {
+    let c;
+    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+      c = hex.substring(1).split("");
+      if (c.length === 3) {
+        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+      }
+      c = "0x" + c.join("");
+      return (
+        "rgba(" + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") + "," + alpha + ")"
+      );
+    }
+    return `rgba(115, 42, 223, ${alpha})`;
+  };
+
+  const handleColorChange = (key, color) => {
+    setCardColors((prev) => ({ ...prev, [key]: color }));
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -173,6 +202,18 @@ const App = () => {
               ))}
             </div>
 
+            <button
+              onClick={() => setCustomizationMode(!customizationMode)}
+              className={`p-2 rounded-full transition-all ${
+                customizationMode
+                  ? "bg-nexus-purple text-white shadow-[0_0_15px_rgba(115,42,223,0.5)]"
+                  : "bg-nexus-glass border border-nexus-glassBorder text-gray-400 hover:text-white"
+              }`}
+              title="Customize Glow Colors"
+            >
+              <Palette size={18} />
+            </button>
+
             {/* User Avatar */}
             <div className="w-10 h-10 rounded-full bg-linear-to-tr from-nexus-purple to-nexus-teal flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform">
               <span className="font-bold text-white">U</span>
@@ -198,7 +239,10 @@ const App = () => {
                   colSpan="md:col-span-4"
                   rowSpan="md:row-span-1"
                   className="h-[160px]"
-                  glowColor="rgba(101, 187, 189, 0.2)"
+                  glowColor={hexToRgba(cardColors.monitor, 0.2)}
+                  isCustomizing={customizationMode}
+                  pickerColor={cardColors.monitor}
+                  onColorChange={(c) => handleColorChange("monitor", c)}
                 >
                   <SystemMonitor tasks={tasks} />
                 </BentoCard>
@@ -219,7 +263,10 @@ const App = () => {
                       />
                     </div>
                   }
-                  glowColor="rgba(115, 42, 223, 0.4)"
+                  glowColor={hexToRgba(cardColors.ai, 0.4)}
+                  isCustomizing={customizationMode}
+                  pickerColor={cardColors.ai}
+                  onColorChange={(c) => handleColorChange("ai", c)}
                   className="h-[500px]"
                 >
                   <AIChat />
@@ -232,7 +279,10 @@ const App = () => {
                   rowSpan="md:row-span-1"
                   title="Missions"
                   icon={<CheckSquare />}
-                  glowColor="rgba(255, 100, 100, 0.2)"
+                  glowColor={hexToRgba(cardColors.tasks, 0.2)}
+                  isCustomizing={customizationMode}
+                  pickerColor={cardColors.tasks}
+                  onColorChange={(c) => handleColorChange("tasks", c)}
                   className="h-[500px]"
                 >
                   <Tasks
@@ -250,6 +300,10 @@ const App = () => {
                   rowSpan="md:row-span-1"
                   title="Data Vault"
                   icon={<Database />}
+                  glowColor={hexToRgba(cardColors.vault, 0.5)}
+                  isCustomizing={customizationMode}
+                  pickerColor={cardColors.vault}
+                  onColorChange={(c) => handleColorChange("vault", c)}
                   className="h-[500px]"
                 >
                   <Vault searchQuery={searchQuery} />
@@ -262,7 +316,10 @@ const App = () => {
                   rowSpan="md:row-span-1"
                   title="Timeline"
                   icon={<Calendar />}
-                  glowColor="rgba(101, 187, 189, 0.3)"
+                  glowColor={hexToRgba(cardColors.agenda, 0.3)}
+                  isCustomizing={customizationMode}
+                  pickerColor={cardColors.agenda}
+                  onColorChange={(c) => handleColorChange("agenda", c)}
                   className="h-[500px]"
                 >
                   <Agenda />
@@ -275,7 +332,10 @@ const App = () => {
                   rowSpan="md:row-span-1"
                   title="Neural Notes"
                   icon={<LayoutGrid />}
-                  glowColor="rgba(255, 255, 255, 0.1)"
+                  glowColor={hexToRgba(cardColors.notes, 0.1)}
+                  isCustomizing={customizationMode}
+                  pickerColor={cardColors.notes}
+                  onColorChange={(c) => handleColorChange("notes", c)}
                   className="h-[500px]"
                 >
                   <Notes searchQuery={searchQuery} />
