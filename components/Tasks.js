@@ -94,37 +94,41 @@ const Tasks = () => {
     return (
       <div
         key={task.id}
-        className={`group flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer ${
-          isCritical
-            ? "bg-gradient-to-r from-amber-900/20 to-transparent border-l-2 border-l-amber-500"
+        className={`group flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all duration-300 ${
+          task.completed
+            ? "bg-green-500/5 border border-green-500/10 opacity-50 hover:opacity-80"
+            : isCritical
+            ? "bg-gradient-to-r from-amber-900/20 to-transparent border-l-2 border-l-amber-500 hover:bg-white/5"
             : isOverdue
-            ? "bg-gradient-to-r from-red-900/20 to-transparent border-l-2 border-l-red-500"
-            : ""
+            ? "bg-gradient-to-r from-red-900/20 to-transparent border-l-2 border-l-red-500 hover:bg-white/5"
+            : "hover:bg-white/5 border border-transparent"
         }`}
         onClick={() => toggleTask(task.id)}
       >
-        {task.completed ? (
-          <CheckCircle2 size={18} className="text-nexus-teal" />
-        ) : isCritical ? (
-          <Star size={18} className="text-amber-500 fill-amber-500/20" />
-        ) : isOverdue ? (
-          <AlertTriangle size={18} className="text-red-500 animate-pulse" />
-        ) : (
-          <Circle
-            size={18}
-            className="text-gray-500 group-hover:text-nexus-purple"
-          />
-        )}
+        <div className="transform transition-transform duration-200 hover:scale-110 active:scale-95">
+          {task.completed ? (
+            <CheckCircle2 size={18} className="text-nexus-teal" />
+          ) : isCritical ? (
+            <Star size={18} className="text-amber-500 fill-amber-500/20" />
+          ) : isOverdue ? (
+            <AlertTriangle size={18} className="text-red-500 animate-pulse" />
+          ) : (
+            <Circle
+              size={18}
+              className="text-gray-500 group-hover:text-nexus-purple"
+            />
+          )}
+        </div>
         <div className="flex-1">
           <p
-            className={`text-sm font-medium transition-all ${getStatusColor(
+            className={`text-sm font-medium transition-all duration-300 ${getStatusColor(
               task
             )}`}
           >
             {task.title}
           </p>
           <p
-            className={`text-[10px] font-mono ${
+            className={`text-[10px] font-mono transition-colors duration-300 ${
               isOverdue
                 ? "text-red-300"
                 : isCritical
