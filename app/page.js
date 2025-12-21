@@ -147,10 +147,19 @@ const App = () => {
                   variants={itemVariants}
                   colSpan="md:col-span-2"
                   rowSpan="md:row-span-1"
-                  title="Nexus AI Core"
-                  icon={<BrainCircuit />}
+                  title="A.C.E - AI Companion Everyday"
+                  icon={
+                    <div className="relative w-8 h-8">
+                      <Image
+                        src="/assets/ai-mascot.png"
+                        alt="A.C.E Mascot"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  }
                   glowColor="rgba(115, 42, 223, 0.4)"
-                  className="min-h-[350px]"
+                  className="h-[500px]"
                 >
                   <AIChat />
                 </BentoCard>
@@ -163,7 +172,7 @@ const App = () => {
                   title="Missions"
                   icon={<CheckSquare />}
                   glowColor="rgba(255, 100, 100, 0.2)"
-                  className="min-h-[350px]"
+                  className="h-[500px]"
                 >
                   <Tasks />
                 </BentoCard>
@@ -175,7 +184,7 @@ const App = () => {
                   rowSpan="md:row-span-1"
                   title="Data Vault"
                   icon={<Database />}
-                  className="min-h-[350px]"
+                  className="h-[500px]"
                 >
                   <Vault />
                 </BentoCard>
@@ -188,7 +197,7 @@ const App = () => {
                   title="Timeline"
                   icon={<Calendar />}
                   glowColor="rgba(101, 187, 189, 0.3)"
-                  className="min-h-[500px]"
+                  className="h-[500px]"
                 >
                   <Agenda />
                 </BentoCard>
@@ -201,7 +210,7 @@ const App = () => {
                   title="Neural Notes"
                   icon={<LayoutGrid />}
                   glowColor="rgba(255, 255, 255, 0.1)"
-                  className="min-h-[500px]"
+                  className="h-[500px]"
                 >
                   <div className="h-full flex gap-4">
                     <div className="w-full md:w-3/4 h-full">
