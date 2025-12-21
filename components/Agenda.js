@@ -29,11 +29,11 @@ const Agenda = ({ searchQuery = "", events = [] }) => {
               <div
                 key={i}
                 className={`
-              h-6 w-6 flex items-center justify-center text-xs rounded-full mx-auto
+              h-6 w-6 flex items-center justify-center text-xs rounded-full mx-auto transition-all duration-200 cursor-pointer
               ${
                 i + 1 === today
-                  ? "bg-nexus-purple text-white shadow-lg shadow-nexus-purple/50"
-                  : "text-text-secondary hover:bg-input-bg"
+                  ? "bg-nexus-purple text-white shadow-lg shadow-nexus-purple/50 hover:scale-110"
+                  : "text-text-secondary hover:bg-nexus-teal/20 hover:text-nexus-teal hover:scale-110"
               }
             `}
               >
