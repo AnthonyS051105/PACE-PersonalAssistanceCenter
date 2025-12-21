@@ -4,7 +4,7 @@ import {
   Circle,
   Plus,
   BellRing,
-  AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 const Tasks = () => {
@@ -74,7 +74,7 @@ const Tasks = () => {
     if (task.completed)
       return "text-green-400 decoration-slate-500 line-through";
     const isOverdue = new Date() > task.deadline;
-    if (isOverdue) return "text-red-400";
+    if (isOverdue) return "text-red-200";
     return "text-white";
   };
 
@@ -112,18 +112,23 @@ const Tasks = () => {
             <div
               key={task.id}
               className={`group flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer ${
-                isOverdue ? "bg-red-900/20 border border-red-500/30" : ""
+                isOverdue
+                  ? "bg-gradient-to-r from-red-900/20 to-transparent border-l-2 border-l-red-500"
+                  : ""
               }`}
               onClick={() => toggleTask(task.id)}
             >
               {task.completed ? (
                 <CheckCircle2 size={18} className="text-nexus-teal" />
+              ) : isOverdue ? (
+                <AlertTriangle
+                  size={18}
+                  className="text-red-500 animate-pulse"
+                />
               ) : (
                 <Circle
                   size={18}
-                  className={`text-gray-500 group-hover:text-nexus-purple ${
-                    isOverdue ? "text-red-400" : ""
-                  }`}
+                  className="text-gray-500 group-hover:text-nexus-purple"
                 />
               )}
               <div className="flex-1">
@@ -134,16 +139,15 @@ const Tasks = () => {
                 >
                   {task.title}
                 </p>
-                <p className="text-[10px] text-gray-500 font-mono">
+                <p
+                  className={`text-[10px] font-mono ${
+                    isOverdue ? "text-red-300" : "text-gray-500"
+                  }`}
+                >
                   {task.deadline.toLocaleDateString()} •{" "}
                   {task.priority.toUpperCase()}
                 </p>
               </div>
-              {isOverdue && (
-                <div className="text-red-400" title="Overdue">
-                  <AlertCircle size={16} />
-                </div>
-              )}
             </div>
           );
         })}
