@@ -48,6 +48,12 @@ body {
   background: #27342c;
   border-radius: 4px;
 }
+
+/* Date Picker Icon White */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #732adf;
 }
