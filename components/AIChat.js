@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { generateAIResponse } from "../lib/geminiService";
 
 const AIChat = () => {
@@ -79,7 +81,64 @@ const AIChat = () => {
                 {msg.role === "model" ? <Bot size={12} /> : <User size={12} />}
                 <span>{msg.role === "model" ? "Nexus AI" : "You"}</span>
               </div>
-              <div className="whitespace-pre-wrap">{msg.text}</div>
+              <div className="markdown-content">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ node, ...props }) => (
+                      <p className="mb-2 last:mb-0" {...props} />
+                    ),
+                    ul: ({ node, ...props }) => (
+                      <ul
+                        className="list-disc list-inside mb-2 space-y-1 pl-2"
+                        {...props}
+                      />
+                    ),
+                    ol: ({ node, ...props }) => (
+                      <ol
+                        className="list-decimal list-inside mb-2 space-y-1 pl-2"
+                        {...props}
+                      />
+                    ),
+                    li: ({ node, ...props }) => (
+                      <li className="text-gray-200" {...props} />
+                    ),
+                    strong: ({ node, ...props }) => (
+                      <strong
+                        className="font-bold text-nexus-teal"
+                        {...props}
+                      />
+                    ),
+                    a: ({ node, ...props }) => (
+                      <a
+                        className="text-nexus-teal underline hover:text-white"
+                        {...props}
+                      />
+                    ),
+                    code: ({ node, inline, className, children, ...props }) => {
+                      return inline ? (
+                        <code
+                          className="bg-black/30 px-1 py-0.5 rounded text-nexus-teal font-mono text-xs"
+                          {...props}
+                        >
+                          {children}
+                        </code>
+                      ) : (
+                        <div className="bg-black/30 p-2 rounded-lg my-2 overflow-x-auto">
+                          <code
+                            className="font-mono text-xs text-gray-300"
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        </div>
+                      );
+                    },
+                  }}
+                >
+                  {msg.text}
+                </ReactMarkdown>
+              </div>
             </div>
           </div>
         ))}
