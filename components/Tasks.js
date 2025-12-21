@@ -14,7 +14,7 @@ import {
   Bell,
 } from "lucide-react";
 
-const Tasks = ({ tasks, setTasks, compact = false }) => {
+const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
   const [newTask, setNewTask] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
@@ -27,14 +27,18 @@ const Tasks = ({ tasks, setTasks, compact = false }) => {
 
     if (Notification.permission === "granted") {
       new Notification("Task Overdue", {
-        body: `The task "${task.title}" was due on ${task.deadline.toLocaleDateString()}`,
+        body: `The task "${
+          task.title
+        }" was due on ${task.deadline.toLocaleDateString()}`,
         icon: "/assets/logo.svg", // Optional: Add a logo if available
       });
     } else if (Notification.permission !== "denied") {
       Notification.requestPermission().then((permission) => {
         if (permission === "granted") {
           new Notification("Task Overdue", {
-            body: `The task "${task.title}" was due on ${task.deadline.toLocaleDateString()}`,
+            body: `The task "${
+              task.title
+            }" was due on ${task.deadline.toLocaleDateString()}`,
           });
         }
       });
@@ -111,10 +115,21 @@ const Tasks = ({ tasks, setTasks, compact = false }) => {
     return "text-white";
   };
 
-  const criticalTasks = tasks.filter(
+  const filteredTasks = tasks.filter(
+    (t) =>
+      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.tags &&
+        t.tags.some((tag) =>
+          tag.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
+  );
+
+  const criticalTasks = filteredTasks.filter(
     (t) => t.priority === "high" && !t.completed
   );
-  const otherTasks = tasks.filter((t) => t.priority !== "high" || t.completed);
+  const otherTasks = filteredTasks.filter(
+    (t) => t.priority !== "high" || t.completed
+  );
 
   const renderTask = (task, isCritical = false) => {
     const isOverdue = !task.completed && new Date() > task.deadline;

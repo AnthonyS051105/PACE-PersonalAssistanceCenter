@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,6 +22,21 @@ import SystemMonitor from "../components/SystemMonitor";
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const [tasks, setTasks] = useState([
     {
       id: "1",
@@ -113,17 +128,25 @@ const App = () => {
           {/* Search Bar */}
           <motion.div
             variants={itemVariants}
-            className="flex-1 max-w-md mx-4 relative hidden md:block"
+            className="flex-1 max-w-md mx-4 relative hidden md:block group"
           >
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-nexus-teal transition-colors"
               size={16}
             />
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Global Search..."
-              className="w-full bg-nexus-glass border border-nexus-glassBorder rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-nexus-teal transition-all"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search ACE..."
+              className="w-full bg-nexus-glass border border-nexus-glassBorder rounded-xl py-2.5 pl-10 pr-12 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-nexus-teal transition-all"
             />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+              <span className="text-[10px] font-mono text-gray-600 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                ⌘K
+              </span>
+            </div>
           </motion.div>
 
           {/* Right Side: Tabs + User */}
@@ -212,7 +235,12 @@ const App = () => {
                   glowColor="rgba(255, 100, 100, 0.2)"
                   className="h-[500px]"
                 >
-                  <Tasks tasks={tasks} setTasks={setTasks} compact={true} />
+                  <Tasks
+                    tasks={tasks}
+                    setTasks={setTasks}
+                    compact={true}
+                    searchQuery={searchQuery}
+                  />
                 </BentoCard>
 
                 {/* 3. Quick Vault (Standard) */}
@@ -224,7 +252,7 @@ const App = () => {
                   icon={<Database />}
                   className="h-[500px]"
                 >
-                  <Vault />
+                  <Vault searchQuery={searchQuery} />
                 </BentoCard>
 
                 {/* 4. Agenda (Tall) */}
@@ -250,7 +278,7 @@ const App = () => {
                   glowColor="rgba(255, 255, 255, 0.1)"
                   className="h-[500px]"
                 >
-                  <Notes />
+                  <Notes searchQuery={searchQuery} />
                 </BentoCard>
               </motion.div>
             )}
@@ -288,7 +316,11 @@ const App = () => {
                   Mission Control
                 </h2>
                 <div className="flex-1 overflow-hidden">
-                  <Tasks tasks={tasks} setTasks={setTasks} />
+                  <Tasks
+                    tasks={tasks}
+                    setTasks={setTasks}
+                    searchQuery={searchQuery}
+                  />
                 </div>
               </motion.div>
             )}

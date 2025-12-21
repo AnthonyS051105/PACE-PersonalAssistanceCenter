@@ -10,7 +10,7 @@ import {
   HardDrive,
 } from "lucide-react";
 
-const Vault = () => {
+const Vault = ({ searchQuery = "" }) => {
   const defaultItems = [
     { id: "1", title: "Calculus Syllabus", url: "#", category: "doc" },
     { id: "2", title: "React Crash Course", url: "#", category: "youtube" },
@@ -25,6 +25,10 @@ const Vault = () => {
     }
     return defaultItems;
   });
+
+  const filteredLinks = links.filter((link) =>
+    link.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const [isAdding, setIsAdding] = useState(false);
   const [newLink, setNewLink] = useState({
@@ -133,7 +137,7 @@ const Vault = () => {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {links.map((item) => (
+          {filteredLinks.map((item) => (
             <a
               key={item.id}
               href={item.url}

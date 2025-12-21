@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 import { summarizeNotes } from "../lib/geminiService";
 
-const Notes = () => {
+const Notes = ({ searchQuery = "" }) => {
   const [content, setContent] = useState(
     "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$"
   );
+  const hasMatch =
+    searchQuery && content.toLowerCase().includes(searchQuery.toLowerCase());
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const fileInputRef = useRef(null);
@@ -103,6 +105,11 @@ const Notes = () => {
     <div className="flex flex-col h-full relative">
       <div className="flex items-center justify-between mb-2">
         <div className="flex gap-2 items-center">
+          {hasMatch && (
+            <span className="text-[10px] font-bold text-nexus-teal bg-nexus-teal/10 px-2 py-0.5 rounded border border-nexus-teal/30 animate-pulse mr-2">
+              MATCH
+            </span>
+          )}
           <button
             onClick={handleSummarize}
             disabled={isSummarizing}
