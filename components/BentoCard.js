@@ -47,8 +47,8 @@ const BentoCard = ({
       {/* Content */}
       <div className="flex-1 p-5 z-10 overflow-hidden relative">{children}</div>
 
-      {/* Interactive Shine */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-tr from-transparent via-white/5 to-transparent" />
+      {/* Interactive Shine  */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-linear-to-tr from-transparent via-white/5 to-transparent" />
     </motion.div>
   );
 };

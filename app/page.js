@@ -73,8 +73,8 @@ const App = () => {
               </div>
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-nexus-deep" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-nexus-teal to-nexus-purple">
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-white via-nexus-teal to-nexus-purple">
                 PACE
               </h1>
               <p className="text-[10px] text-gray-400 font-mono tracking-[0.2em] uppercase">
@@ -124,7 +124,7 @@ const App = () => {
             </div>
 
             {/* User Avatar */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-nexus-purple to-nexus-teal flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-linear-to-tr from-nexus-purple to-nexus-teal flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform">
               <span className="font-bold text-white">U</span>
             </div>
           </motion.div>
@@ -205,7 +205,7 @@ const App = () => {
                     {/* Decorative Panel within Notes for aesthetics */}
                     <div className="hidden md:flex w-1/4 h-full items-center justify-center border-l border-white/5 pl-4">
                       <div className="text-center opacity-50">
-                        <div className="text-4xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-transparent">
+                        <div className="text-4xl font-mono font-bold text-transparent bg-clip-text bg-linear-to-b from-white to-transparent">
                           {new Date().getHours()}:
                           {new Date().getMinutes().toString().padStart(2, "0")}
                         </div>

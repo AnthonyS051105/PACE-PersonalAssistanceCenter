@@ -59,7 +59,7 @@ const Agenda = () => {
             key={event.id}
             className="relative pl-4 border-l-2 border-nexus-teal/30"
           >
-            <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-nexus-teal shadow-[0_0_8px_#65BBBD]" />
+            <div className="absolute -left-1.25 top-0 w-2 h-2 rounded-full bg-nexus-teal shadow-[0_0_8px_#65BBBD]" />
             <h5 className="text-sm font-semibold text-gray-200">
               {event.title}
             </h5>
