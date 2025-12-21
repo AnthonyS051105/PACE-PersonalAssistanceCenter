@@ -8,6 +8,7 @@ import {
   Plus,
   X,
   HardDrive,
+  Search,
 } from "lucide-react";
 
 const Vault = ({ searchQuery = "" }) => {
@@ -26,9 +27,17 @@ const Vault = ({ searchQuery = "" }) => {
     return defaultItems;
   });
 
-  const filteredLinks = links.filter((link) =>
-    link.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [localSearch, setLocalSearch] = useState("");
+
+  const filteredLinks = links.filter((link) => {
+    const matchesGlobal = link.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesLocal =
+      link.title.toLowerCase().includes(localSearch.toLowerCase()) ||
+      link.category.toLowerCase().includes(localSearch.toLowerCase());
+    return matchesGlobal && matchesLocal;
+  });
 
   const [isAdding, setIsAdding] = useState(false);
   const [newLink, setNewLink] = useState({
@@ -81,7 +90,7 @@ const Vault = ({ searchQuery = "" }) => {
   ];
 
   return (
-    <div className="h-full overflow-y-auto pr-1">
+    <div className="h-full flex flex-col">
       {isAdding ? (
         <div className="flex flex-col gap-3 h-full">
           <div className="flex items-center justify-between mb-2">
@@ -136,43 +145,59 @@ const Vault = ({ searchQuery = "" }) => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {filteredLinks.map((item) => (
-            <a
-              key={item.id}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative flex flex-col p-3 rounded-xl bg-white/5 border border-white/5 hover:border-nexus-teal/50 transition-all hover:-translate-y-1"
-            >
-              <button
-                onClick={(e) => handleDelete(e, item.id)}
-                className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+        <>
+          <div className="relative mb-3 shrink-0">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              size={14}
+            />
+            <input
+              type="text"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              placeholder="Filter resources..."
+              className="w-full bg-black/20 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-nexus-teal transition-colors"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
+            {filteredLinks.map((item) => (
+              <a
+                key={item.id}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex flex-col p-3 rounded-xl bg-white/5 border border-white/5 hover:border-nexus-teal/50 transition-all hover:-translate-y-1"
               >
-                <Trash2 size={12} />
-              </button>
+                <button
+                  onClick={(e) => handleDelete(e, item.id)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+                >
+                  <Trash2 size={12} />
+                </button>
 
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-black/30 rounded-lg group-hover:bg-nexus-teal/20 transition-colors">
-                  {getIcon(item.category)}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-black/30 rounded-lg group-hover:bg-nexus-teal/20 transition-colors">
+                    {getIcon(item.category)}
+                  </div>
+                  <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-nexus-teal transition-colors" />
                 </div>
-                <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-nexus-teal transition-colors" />
-              </div>
-              <span className="text-xs font-medium text-gray-300 group-hover:text-white truncate">
-                {item.title}
-              </span>
-            </a>
-          ))}
+                <span className="text-xs font-medium text-gray-300 group-hover:text-white truncate">
+                  {item.title}
+                </span>
+              </a>
+            ))}
 
-          {/* Add New Button */}
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-white/10 hover:border-nexus-purple/50 text-gray-500 hover:text-nexus-purple transition-all gap-1 min-h-[80px]"
-          >
-            <Plus size={20} />
-            <span className="text-[10px]">Add Resource</span>
-          </button>
-        </div>
+            {/* Add New Button */}
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-white/10 hover:border-nexus-purple/50 text-gray-500 hover:text-nexus-purple transition-all gap-1 min-h-[80px]"
+            >
+              <Plus size={20} />
+              <span className="text-[10px]">Add Resource</span>
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
