@@ -11,12 +11,38 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
+  Bell,
 } from "lucide-react";
 
 const Tasks = ({ tasks, setTasks, compact = false }) => {
   const [newTask, setNewTask] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
+
+  const triggerReminder = (task) => {
+    if (!("Notification" in window)) {
+      alert(`Reminder: ${task.title} is overdue!`);
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      new Notification("Task Overdue", {
+        body: `The task "${task.title}" was due on ${task.deadline.toLocaleDateString()}`,
+        icon: "/assets/logo.svg", // Optional: Add a logo if available
+      });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification("Task Overdue", {
+            body: `The task "${task.title}" was due on ${task.deadline.toLocaleDateString()}`,
+          });
+        }
+      });
+    } else {
+      // Fallback if permission denied
+      alert(`Reminder: ${task.title} is overdue!`);
+    }
+  };
 
   const priorityConfig = {
     low: {
@@ -150,6 +176,18 @@ const Tasks = ({ tasks, setTasks, compact = false }) => {
             </span>
           </div>
         </div>
+        {isOverdue && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              triggerReminder(task);
+            }}
+            className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-all animate-pulse"
+            title="Trigger Reminder"
+          >
+            <Bell size={16} />
+          </button>
+        )}
       </div>
     );
   };
