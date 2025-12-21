@@ -287,6 +287,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Circle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle.js [app-client] (ecmascript) <export default as Circle>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/plus.js [app-client] (ecmascript) <export default as Plus>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$bell$2d$ring$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__BellRing$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/bell-ring.js [app-client] (ecmascript) <export default as BellRing>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-alert.js [app-client] (ecmascript) <export default as AlertCircle>");
 ;
 var _s = __turbopack_context__.k.signature();
 ;
@@ -326,6 +327,7 @@ const Tasks = ()=>{
         }
     ]);
     const [newTask, setNewTask] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
+    const [newDeadline, setNewDeadline] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const toggleTask = (id)=>{
         setTasks(tasks.map((t)=>t.id === id ? {
                 ...t,
@@ -337,7 +339,7 @@ const Tasks = ()=>{
         const task = {
             id: Date.now().toString(),
             title: newTask,
-            deadline: new Date(Date.now() + 86400000),
+            deadline: newDeadline ? new Date(newDeadline) : new Date(Date.now() + 86400000),
             completed: false,
             priority: "medium",
             tags: []
@@ -347,6 +349,7 @@ const Tasks = ()=>{
             ...tasks
         ]);
         setNewTask("");
+        setNewDeadline("");
     };
     const sendWhatsAppNotification = ()=>{
         alert("Sending WhatsApp notification to registered number: \n\n" + tasks.filter((t)=>!t.completed).map((t)=>`- ${t.title}`).join("\n"));
@@ -372,7 +375,17 @@ const Tasks = ()=>{
                         className: "flex-1 bg-black/20 border-b border-white/10 px-2 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
                     }, void 0, false, {
                         fileName: "[project]/components/Tasks.js",
-                        lineNumber: 75,
+                        lineNumber: 85,
+                        columnNumber: 9
+                    }, ("TURBOPACK compile-time value", void 0)),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                        type: "date",
+                        value: newDeadline,
+                        onChange: (e)=>setNewDeadline(e.target.value),
+                        className: "bg-black/20 border-b border-white/10 px-2 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono w-min"
+                    }, void 0, false, {
+                        fileName: "[project]/components/Tasks.js",
+                        lineNumber: 93,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -382,24 +395,26 @@ const Tasks = ()=>{
                             size: 20
                         }, void 0, false, {
                             fileName: "[project]/components/Tasks.js",
-                            lineNumber: 87,
+                            lineNumber: 103,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/Tasks.js",
-                        lineNumber: 83,
+                        lineNumber: 99,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/Tasks.js",
-                lineNumber: 74,
+                lineNumber: 84,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "flex-1 overflow-y-auto space-y-2 pr-1",
-                children: tasks.map((task)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "group flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer",
+                children: tasks.map((task)=>{
+                    const isOverdue = !task.completed && new Date() > task.deadline;
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: `group flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer ${isOverdue ? "bg-red-900/20 border border-red-500/30" : ""}`,
                         onClick: ()=>toggleTask(task.id),
                         children: [
                             task.completed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__["CheckCircle2"], {
@@ -407,15 +422,15 @@ const Tasks = ()=>{
                                 className: "text-nexus-teal"
                             }, void 0, false, {
                                 fileName: "[project]/components/Tasks.js",
-                                lineNumber: 100,
-                                columnNumber: 15
+                                lineNumber: 120,
+                                columnNumber: 17
                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Circle$3e$__["Circle"], {
                                 size: 18,
-                                className: "text-gray-500 group-hover:text-nexus-purple"
+                                className: `text-gray-500 group-hover:text-nexus-purple ${isOverdue ? "text-red-400" : ""}`
                             }, void 0, false, {
                                 fileName: "[project]/components/Tasks.js",
-                                lineNumber: 102,
-                                columnNumber: 15
+                                lineNumber: 122,
+                                columnNumber: 17
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "flex-1",
@@ -425,8 +440,8 @@ const Tasks = ()=>{
                                         children: task.title
                                     }, void 0, false, {
                                         fileName: "[project]/components/Tasks.js",
-                                        lineNumber: 108,
-                                        columnNumber: 15
+                                        lineNumber: 130,
+                                        columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "text-[10px] text-gray-500 font-mono",
@@ -438,24 +453,40 @@ const Tasks = ()=>{
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/Tasks.js",
-                                        lineNumber: 115,
-                                        columnNumber: 15
+                                        lineNumber: 137,
+                                        columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/Tasks.js",
-                                lineNumber: 107,
-                                columnNumber: 13
+                                lineNumber: 129,
+                                columnNumber: 15
+                            }, ("TURBOPACK compile-time value", void 0)),
+                            isOverdue && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "text-red-400",
+                                title: "Overdue",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                    size: 16
+                                }, void 0, false, {
+                                    fileName: "[project]/components/Tasks.js",
+                                    lineNumber: 144,
+                                    columnNumber: 19
+                                }, ("TURBOPACK compile-time value", void 0))
+                            }, void 0, false, {
+                                fileName: "[project]/components/Tasks.js",
+                                lineNumber: 143,
+                                columnNumber: 17
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, task.id, true, {
                         fileName: "[project]/components/Tasks.js",
-                        lineNumber: 94,
-                        columnNumber: 11
-                    }, ("TURBOPACK compile-time value", void 0)))
+                        lineNumber: 112,
+                        columnNumber: 13
+                    }, ("TURBOPACK compile-time value", void 0));
+                })
             }, void 0, false, {
                 fileName: "[project]/components/Tasks.js",
-                lineNumber: 92,
+                lineNumber: 108,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -466,24 +497,24 @@ const Tasks = ()=>{
                         size: 14
                     }, void 0, false, {
                         fileName: "[project]/components/Tasks.js",
-                        lineNumber: 128,
+                        lineNumber: 156,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     "Sync to WhatsApp"
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/Tasks.js",
-                lineNumber: 124,
+                lineNumber: 152,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/components/Tasks.js",
-        lineNumber: 72,
+        lineNumber: 82,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s(Tasks, "kxa0QMbh71I5JyQzsTbqSDr4s9g=");
+_s(Tasks, "1r3RxtmyOqQEFEdp+mXeK84D3sQ=");
 _c = Tasks;
 const __TURBOPACK__default__export__ = Tasks;
 var _c;

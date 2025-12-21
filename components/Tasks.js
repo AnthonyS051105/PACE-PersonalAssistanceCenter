@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { CheckCircle2, Circle, Plus, BellRing } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Plus,
+  BellRing,
+  AlertCircle,
+} from "lucide-react";
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([
@@ -29,6 +35,7 @@ const Tasks = () => {
     },
   ]);
   const [newTask, setNewTask] = useState("");
+  const [newDeadline, setNewDeadline] = useState("");
 
   const toggleTask = (id) => {
     setTasks(
@@ -41,13 +48,16 @@ const Tasks = () => {
     const task = {
       id: Date.now().toString(),
       title: newTask,
-      deadline: new Date(Date.now() + 86400000), // Default tomorrow
+      deadline: newDeadline
+        ? new Date(newDeadline)
+        : new Date(Date.now() + 86400000), // Default tomorrow
       completed: false,
       priority: "medium",
       tags: [],
     };
     setTasks([task, ...tasks]);
     setNewTask("");
+    setNewDeadline("");
   };
 
   const sendWhatsAppNotification = () => {
@@ -80,6 +90,12 @@ const Tasks = () => {
           placeholder="New Mission..."
           className="flex-1 bg-black/20 border-b border-white/10 px-2 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
         />
+        <input
+          type="date"
+          value={newDeadline}
+          onChange={(e) => setNewDeadline(e.target.value)}
+          className="bg-black/20 border-b border-white/10 px-2 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono w-min"
+        />
         <button
           onClick={addTask}
           className="text-nexus-teal hover:text-white transition-colors"
@@ -90,35 +106,47 @@ const Tasks = () => {
 
       {/* Task List */}
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-        {tasks.map((task) => (
-          <div
-            key={task.id}
-            className="group flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
-            onClick={() => toggleTask(task.id)}
-          >
-            {task.completed ? (
-              <CheckCircle2 size={18} className="text-nexus-teal" />
-            ) : (
-              <Circle
-                size={18}
-                className="text-gray-500 group-hover:text-nexus-purple"
-              />
-            )}
-            <div className="flex-1">
-              <p
-                className={`text-sm font-medium transition-all ${getStatusColor(
-                  task
-                )}`}
-              >
-                {task.title}
-              </p>
-              <p className="text-[10px] text-gray-500 font-mono">
-                {task.deadline.toLocaleDateString()} •{" "}
-                {task.priority.toUpperCase()}
-              </p>
+        {tasks.map((task) => {
+          const isOverdue = !task.completed && new Date() > task.deadline;
+          return (
+            <div
+              key={task.id}
+              className={`group flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer ${
+                isOverdue ? "bg-red-900/20 border border-red-500/30" : ""
+              }`}
+              onClick={() => toggleTask(task.id)}
+            >
+              {task.completed ? (
+                <CheckCircle2 size={18} className="text-nexus-teal" />
+              ) : (
+                <Circle
+                  size={18}
+                  className={`text-gray-500 group-hover:text-nexus-purple ${
+                    isOverdue ? "text-red-400" : ""
+                  }`}
+                />
+              )}
+              <div className="flex-1">
+                <p
+                  className={`text-sm font-medium transition-all ${getStatusColor(
+                    task
+                  )}`}
+                >
+                  {task.title}
+                </p>
+                <p className="text-[10px] text-gray-500 font-mono">
+                  {task.deadline.toLocaleDateString()} •{" "}
+                  {task.priority.toUpperCase()}
+                </p>
+              </div>
+              {isOverdue && (
+                <div className="text-red-400" title="Overdue">
+                  <AlertCircle size={16} />
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
