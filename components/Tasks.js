@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -22,6 +22,8 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
   const [newTask, setNewTask] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
+  const [newReminder, setNewReminder] = useState("");
+  const [showReminderInput, setShowReminderInput] = useState(false);
 
   // Sorting & Filtering State
   const [filterStatus, setFilterStatus] = useState("all"); // all, active, completed
@@ -29,6 +31,47 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
   const [sortBy, setSortBy] = useState(null); // deadline, priority
   const [sortOrder, setSortOrder] = useState("asc"); // asc, desc
   const [showFilters, setShowFilters] = useState(false);
+
+  // Request Notification Permission
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Poll for reminders
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      let updatesNeeded = false;
+      const updatedTasks = tasks.map((task) => {
+        if (
+          task.reminderTime &&
+          !task.reminderSent &&
+          new Date(task.reminderTime) <= now
+        ) {
+          // Trigger Notification
+          if (Notification.permission === "granted") {
+            new Notification("Task Reminder", {
+              body: `Reminder: ${task.title}`,
+              icon: "/assets/logo.svg",
+            });
+          } else {
+            alert(`Reminder: ${task.title}`);
+          }
+          updatesNeeded = true;
+          return { ...task, reminderSent: true };
+        }
+        return task;
+      });
+
+      if (updatesNeeded) {
+        setTasks(updatedTasks);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [tasks, setTasks]);
 
   const triggerReminder = (task) => {
     if (!("Notification" in window)) {
@@ -100,11 +143,15 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
       completed: false,
       priority: newPriority,
       tags: [],
+      reminderTime: newReminder ? new Date(newReminder) : null,
+      reminderSent: false,
     };
     setTasks([task, ...tasks]);
     setNewTask("");
     setNewDeadline("");
     setNewPriority("medium");
+    setNewReminder("");
+    setShowReminderInput(false);
   };
 
   const sendWhatsAppNotification = () => {
@@ -248,6 +295,22 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
             >
               {task.deadline.toLocaleDateString()}
             </p>
+            {task.reminderTime && (
+              <div
+                className="flex items-center gap-1 text-[10px] text-nexus-purple/80"
+                title={`Reminder: ${new Date(
+                  task.reminderTime
+                ).toLocaleString()}`}
+              >
+                <Bell size={10} />
+                <span className="font-mono">
+                  {new Date(task.reminderTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            )}
             <span
               className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${pConfig.bg} ${pConfig.color} ${pConfig.border}`}
             >
@@ -337,19 +400,37 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                 {priorityConfig[newPriority].label}
               </button>
             </div>
-            <div className="flex items-center justify-between gap-2 mt-2">
+            <div className="flex items-center justify-between gap-2 mt-2 bg-black/20 border border-white/10 rounded focus-within:border-nexus-purple transition-colors p-1">
               <div className="flex items-center gap-2 flex-1">
-                <div className="relative flex-1">
+                <div className="relative">
                   <input
-                    type="date"
+                    type="datetime-local"
                     value={newDeadline}
                     onChange={(e) => setNewDeadline(e.target.value)}
-                    className="w-full bg-black/20 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
+                    style={{ colorScheme: "dark" }}
+                    className="bg-transparent px-2 py-1.5 text-xs text-white focus:outline-none font-mono"
                   />
                 </div>
-                <button className="p-1.5 text-gray-500 hover:text-white transition-colors">
+                <button
+                  onClick={() => setShowReminderInput(!showReminderInput)}
+                  className={`p-1.5 rounded transition-colors ${
+                    showReminderInput
+                      ? "text-nexus-purple bg-nexus-purple/10"
+                      : "text-gray-500 hover:text-white"
+                  }`}
+                  title="Set Reminder"
+                >
                   <Bell size={16} />
                 </button>
+                {showReminderInput && (
+                  <input
+                    type="datetime-local"
+                    value={newReminder}
+                    onChange={(e) => setNewReminder(e.target.value)}
+                    style={{ colorScheme: "dark" }}
+                    className="bg-transparent border-l border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none font-mono"
+                  />
+                )}
               </div>
 
               <div className="flex items-center gap-2">
