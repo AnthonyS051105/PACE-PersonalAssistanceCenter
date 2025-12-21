@@ -18,9 +18,36 @@ import Tasks from "../components/Tasks";
 import AIChat from "../components/AIChat";
 import Notes from "../components/Notes";
 import Vault from "../components/Vault";
+import SystemMonitor from "../components/SystemMonitor";
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [tasks, setTasks] = useState([
+    {
+      id: "1",
+      title: "Complete Project Report",
+      deadline: new Date(Date.now() + 86400000),
+      completed: false,
+      priority: "high",
+      tags: ["uni"],
+    },
+    {
+      id: "2",
+      title: "Review Calculus III",
+      deadline: new Date(Date.now() - 86400000),
+      completed: false,
+      priority: "medium",
+      tags: ["study"],
+    },
+    {
+      id: "3",
+      title: "Buy Groceries",
+      deadline: new Date(Date.now() + 172800000),
+      completed: true,
+      priority: "low",
+      tags: ["personal"],
+    },
+  ]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -142,12 +169,23 @@ const App = () => {
                 exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
                 className="grid grid-cols-1 md:grid-cols-4 gap-6"
               >
+                {/* 0. System Monitor (Full Width, Short) */}
+                <BentoCard
+                  variants={itemVariants}
+                  colSpan="md:col-span-4"
+                  rowSpan="md:row-span-1"
+                  className="h-[160px]"
+                  glowColor="rgba(101, 187, 189, 0.2)"
+                >
+                  <SystemMonitor tasks={tasks} />
+                </BentoCard>
+
                 {/* 1. AI Core (Wide, Short) */}
                 <BentoCard
                   variants={itemVariants}
                   colSpan="md:col-span-2"
                   rowSpan="md:row-span-1"
-                  title="A.C.E - AI Companion Everyday"
+                  title="A.C.E"
                   icon={
                     <div className="relative w-8 h-8">
                       <Image
@@ -174,7 +212,7 @@ const App = () => {
                   glowColor="rgba(255, 100, 100, 0.2)"
                   className="h-[500px]"
                 >
-                  <Tasks />
+                  <Tasks tasks={tasks} setTasks={setTasks} />
                 </BentoCard>
 
                 {/* 3. Quick Vault (Standard) */}
@@ -212,23 +250,7 @@ const App = () => {
                   glowColor="rgba(255, 255, 255, 0.1)"
                   className="h-[500px]"
                 >
-                  <div className="h-full flex gap-4">
-                    <div className="w-full md:w-3/4 h-full">
-                      <Notes />
-                    </div>
-                    {/* Decorative Panel within Notes for aesthetics */}
-                    <div className="hidden md:flex w-1/4 h-full items-center justify-center border-l border-white/5 pl-4">
-                      <div className="text-center opacity-50">
-                        <div className="text-4xl font-mono font-bold text-transparent bg-clip-text bg-linear-to-b from-white to-transparent">
-                          {new Date().getHours()}:
-                          {new Date().getMinutes().toString().padStart(2, "0")}
-                        </div>
-                        <div className="text-[10px] tracking-[0.3em] uppercase mt-2 text-nexus-teal">
-                          System Optimal
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <Notes />
                 </BentoCard>
               </motion.div>
             )}
@@ -266,7 +288,7 @@ const App = () => {
                   Mission Control
                 </h2>
                 <div className="flex-1 overflow-hidden">
-                  <Tasks />
+                  <Tasks tasks={tasks} setTasks={setTasks} />
                 </div>
               </motion.div>
             )}

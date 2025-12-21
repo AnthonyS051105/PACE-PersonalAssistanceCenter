@@ -10,33 +10,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 
-const Tasks = () => {
-  const [tasks, setTasks] = useState([
-    {
-      id: "1",
-      title: "Complete Project Report",
-      deadline: new Date(Date.now() + 86400000),
-      completed: false,
-      priority: "high",
-      tags: ["uni"],
-    },
-    {
-      id: "2",
-      title: "Review Calculus III",
-      deadline: new Date(Date.now() - 86400000),
-      completed: false,
-      priority: "medium",
-      tags: ["study"],
-    },
-    {
-      id: "3",
-      title: "Buy Groceries",
-      deadline: new Date(Date.now() + 172800000),
-      completed: true,
-      priority: "low",
-      tags: ["personal"],
-    },
-  ]);
+const Tasks = ({ tasks, setTasks }) => {
   const [newTask, setNewTask] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
