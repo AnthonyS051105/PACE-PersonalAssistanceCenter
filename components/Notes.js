@@ -8,6 +8,7 @@ import {
   Upload,
   LayoutTemplate,
   ChevronDown,
+  Archive,
 } from "lucide-react";
 import { summarizeNotes } from "../lib/geminiService";
 
@@ -62,16 +63,40 @@ const Notes = () => {
     }
   };
 
-  const handleExport = () => {
-    // Mock PDF export
-    alert("Exporting note as PDF...");
-    const printContent = document.getElementById("note-editor")?.innerHTML;
-    const originalContents = document.body.innerHTML;
+  const handleArchive = () => {
+    const blob = new Blob([content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `note-${new Date().toISOString().split("T")[0]}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
-    // In a real app, use jsPDF or html2pdf
-    // document.body.innerHTML = printContent || "";
-    // window.print();
-    // document.body.innerHTML = originalContents;
+  const handleExport = () => {
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Note Export</title>
+          <style>
+            body { 
+              font-family: 'Courier New', Courier, monospace; 
+              padding: 40px; 
+              white-space: pre-wrap; 
+              color: #000;
+              line-height: 1.5;
+            }
+            h1 { border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+          </style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
@@ -157,12 +182,21 @@ const Notes = () => {
             )}
           </div>
         </div>
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-1 text-[10px] bg-nexus-deep border border-nexus-teal/30 text-nexus-teal px-2 py-1 rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all"
-        >
-          <Download size={12} /> PDF
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleArchive}
+            className="flex items-center gap-1 text-[10px] bg-nexus-deep border border-nexus-teal/30 text-nexus-teal px-2 py-1 rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all"
+            title="Archive as Markdown"
+          >
+            <Archive size={12} /> MD
+          </button>
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1 text-[10px] bg-nexus-deep border border-nexus-teal/30 text-nexus-teal px-2 py-1 rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all"
+          >
+            <Download size={12} /> PDF
+          </button>
+        </div>
       </div>
 
       <textarea
