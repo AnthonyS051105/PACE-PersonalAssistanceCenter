@@ -12,12 +12,23 @@ import {
   ArrowDown,
   Minus,
   Bell,
+  Filter,
+  Calendar as CalendarIcon,
+  ListFilter,
+  X,
 } from "lucide-react";
 
 const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
   const [newTask, setNewTask] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
+
+  // Sorting & Filtering State
+  const [filterStatus, setFilterStatus] = useState("all"); // all, active, completed
+  const [filterTag, setFilterTag] = useState(null);
+  const [sortBy, setSortBy] = useState(null); // deadline, priority
+  const [sortOrder, setSortOrder] = useState("asc"); // asc, desc
+  const [showFilters, setShowFilters] = useState(false);
 
   const triggerReminder = (task) => {
     if (!("Notification" in window)) {
@@ -115,21 +126,75 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
     return "text-white";
   };
 
-  const filteredTasks = tasks.filter(
-    (t) =>
+  // --- Filtering & Sorting Logic ---
+
+  // 1. Get all unique tags from tasks
+  const allTags = Array.from(new Set(tasks.flatMap((t) => t.tags || [])));
+
+  // 2. Filter tasks
+  const filteredTasks = tasks.filter((t) => {
+    // Search Query
+    const matchesSearch =
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.tags &&
         t.tags.some((tag) =>
           tag.toLowerCase().includes(searchQuery.toLowerCase())
-        ))
-  );
+        ));
 
-  const criticalTasks = filteredTasks.filter(
+    // Status Filter
+    const matchesStatus =
+      filterStatus === "all"
+        ? true
+        : filterStatus === "active"
+        ? !t.completed
+        : t.completed;
+
+    // Tag Filter
+    const matchesTag = filterTag ? t.tags && t.tags.includes(filterTag) : true;
+
+    return matchesSearch && matchesStatus && matchesTag;
+  });
+
+  // 3. Sort tasks (if sortBy is active)
+  const processedTasks = [...filteredTasks].sort((a, b) => {
+    if (!sortBy) return 0;
+
+    let valA, valB;
+    if (sortBy === "deadline") {
+      valA = new Date(a.deadline).getTime();
+      valB = new Date(b.deadline).getTime();
+    } else if (sortBy === "priority") {
+      const pMap = { high: 3, medium: 2, low: 1 };
+      valA = pMap[a.priority];
+      valB = pMap[b.priority];
+    }
+
+    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  // 4. Split for default view (only if NOT sorting)
+  const criticalTasks = processedTasks.filter(
     (t) => t.priority === "high" && !t.completed
   );
-  const otherTasks = filteredTasks.filter(
+  const otherTasks = processedTasks.filter(
     (t) => t.priority !== "high" || t.completed
   );
+
+  const handleSort = (criteria) => {
+    if (sortBy === criteria) {
+      // Toggle order or turn off
+      if (sortOrder === "asc") setSortOrder("desc");
+      else {
+        setSortBy(null);
+        setSortOrder("asc");
+      }
+    } else {
+      setSortBy(criteria);
+      setSortOrder("asc");
+    }
+  };
 
   const renderTask = (task, isCritical = false) => {
     const isOverdue = !task.completed && new Date() > task.deadline;
@@ -258,7 +323,7 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
-                placeholder="New Mission..."
+                placeholder="New Mission... (use #tag)"
                 className="flex-1 bg-transparent px-2 py-2 text-sm text-white focus:outline-none font-mono"
               />
               <button
@@ -272,45 +337,177 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
                 {priorityConfig[newPriority].label}
               </button>
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <input
-                type="date"
-                value={newDeadline}
-                onChange={(e) => setNewDeadline(e.target.value)}
-                className="flex-1 bg-black/20 border-b border-white/10 px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
-              />
-              <button
-                onClick={addTask}
-                className="bg-nexus-teal/20 hover:bg-nexus-teal/40 text-nexus-teal border border-nexus-teal/50 rounded px-3 py-1 transition-colors flex items-center justify-center"
-              >
-                <Plus size={16} />
-              </button>
+            <div className="flex items-center justify-between gap-2 mt-2">
+              <div className="flex items-center gap-2 flex-1">
+                <div className="relative flex-1">
+                  <input
+                    type="date"
+                    value={newDeadline}
+                    onChange={(e) => setNewDeadline(e.target.value)}
+                    className="w-full bg-black/20 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
+                  />
+                </div>
+                <button className="p-1.5 text-gray-500 hover:text-white transition-colors">
+                  <Bell size={16} />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-1.5 rounded transition-colors ${
+                    showFilters
+                      ? "text-nexus-teal bg-nexus-teal/10"
+                      : "text-gray-500 hover:text-white"
+                  }`}
+                >
+                  <Filter size={16} />
+                </button>
+                <button
+                  onClick={addTask}
+                  className="bg-nexus-teal text-nexus-deep border border-nexus-teal/50 rounded px-4 py-1.5 text-xs font-bold hover:bg-white transition-colors flex items-center gap-1"
+                >
+                  <Plus size={14} /> ADD
+                </button>
+              </div>
             </div>
           </>
         )}
       </div>
 
-      {/* Task List */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-        {criticalTasks.length > 0 && (
-          <div>
-            <h3 className="text-amber-400 text-xs font-bold mb-2 flex items-center gap-2">
-              <Flame size={14} /> CRITICAL FOCUS
-            </h3>
-            <div className="space-y-2">
-              {criticalTasks.map((task) => renderTask(task, true))}
+      {/* Toolbar (Sort & Filter) - Only show in standard mode or if not compact */}
+      {!compact && showFilters && (
+        <div className="flex flex-col gap-2 mb-4 p-3 bg-black/40 rounded-xl border border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* Row 1: Status & Sort */}
+          <div className="flex items-center justify-between">
+            {/* Status Filter */}
+            <div className="flex bg-black/40 rounded-lg p-1 gap-1">
+              {["all", "active", "completed"].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilterStatus(s)}
+                  className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${
+                    filterStatus === s
+                      ? "bg-nexus-purple text-white shadow-lg shadow-nexus-purple/20"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                  }`}
+                >
+                  {s === "completed" ? "Done" : s}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort Controls */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleSort("deadline")}
+                className={`px-2 py-1 rounded-md transition-all flex items-center gap-1.5 border ${
+                  sortBy === "deadline"
+                    ? "bg-nexus-teal/10 text-nexus-teal border-nexus-teal/30"
+                    : "bg-transparent border-transparent text-gray-500 hover:bg-white/5"
+                }`}
+                title="Sort by Deadline"
+              >
+                <CalendarIcon size={12} />
+                <span className="text-[10px] font-bold">DATE</span>
+                {sortBy === "deadline" && (
+                  <span className="text-[9px]">
+                    {sortOrder === "asc" ? "↑" : "↓"}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => handleSort("priority")}
+                className={`px-2 py-1 rounded-md transition-all flex items-center gap-1.5 border ${
+                  sortBy === "priority"
+                    ? "bg-nexus-teal/10 text-nexus-teal border-nexus-teal/30"
+                    : "bg-transparent border-transparent text-gray-500 hover:bg-white/5"
+                }`}
+                title="Sort by Priority"
+              >
+                <Flame size={12} />
+                <span className="text-[10px] font-bold">PRIO</span>
+                {sortBy === "priority" && (
+                  <span className="text-[9px]">
+                    {sortOrder === "asc" ? "↑" : "↓"}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
-        )}
 
-        <div>
-          <h3 className="text-gray-400 text-xs font-bold mb-2 flex items-center gap-2">
-            <ClipboardList size={14} /> MISSIONS
-          </h3>
-          <div className="space-y-2">
-            {otherTasks.map((task) => renderTask(task, false))}
-          </div>
+          {/* Row 2: Tags (Horizontal Scroll) */}
+          {allTags.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-hide border-t border-white/5 mt-1">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 text-gray-400">
+                <Filter size={10} />
+                <span className="text-[9px]">TAGS</span>
+              </div>
+
+              <button
+                onClick={() => setFilterTag(null)}
+                className={`whitespace-nowrap px-3 py-1 text-[10px] rounded-full border transition-all ${
+                  filterTag === null
+                    ? "bg-white/10 border-white/20 text-white"
+                    : "border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                }`}
+              >
+                All
+              </button>
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setFilterTag(tag === filterTag ? null : tag)}
+                  className={`whitespace-nowrap px-3 py-1 text-[10px] rounded-full border transition-all ${
+                    filterTag === tag
+                      ? "bg-nexus-purple/20 border-nexus-purple/50 text-nexus-purple"
+                      : "bg-black/20 border-transparent text-gray-500 hover:border-white/10 hover:text-gray-300"
+                  }`}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Task List */}
+      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+        {sortBy ? (
+          // Unified List when Sorting
+          <div className="space-y-2">
+            {processedTasks.map((task) => renderTask(task, false))}
+            {processedTasks.length === 0 && (
+              <div className="text-center py-8 text-gray-500 text-xs italic">
+                No missions match current filters.
+              </div>
+            )}
+          </div>
+        ) : (
+          // Default Split View
+          <>
+            {criticalTasks.length > 0 && (
+              <div>
+                <h3 className="text-amber-400 text-xs font-bold mb-2 flex items-center gap-2">
+                  <Flame size={14} /> CRITICAL FOCUS
+                </h3>
+                <div className="space-y-2">
+                  {criticalTasks.map((task) => renderTask(task, true))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h3 className="text-gray-400 text-xs font-bold mb-2 flex items-center gap-2">
+                <ClipboardList size={14} /> MISSIONS
+              </h3>
+              <div className="space-y-2">
+                {otherTasks.map((task) => renderTask(task, false))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <button

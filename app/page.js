@@ -44,7 +44,11 @@ const App = () => {
       }
       c = "0x" + c.join("");
       return (
-        "rgba(" + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") + "," + alpha + ")"
+        "rgba(" +
+        [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") +
+        "," +
+        alpha +
+        ")"
       );
     }
     return `rgba(115, 42, 223, ${alpha})`;
