@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Download,
   Image as ImageIcon,
   FileText,
   Code,
   Sparkles,
+  Upload,
+  LayoutTemplate,
+  ChevronDown,
 } from "lucide-react";
 import { summarizeNotes } from "../lib/geminiService";
 
@@ -13,6 +16,38 @@ const Notes = () => {
     "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$"
   );
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const templates = {
+    meeting:
+      "# Meeting Notes\n\n**Date:** \n**Attendees:** \n\n## Agenda\n1. \n2. \n\n## Action Items\n- [ ] ",
+    journal:
+      "# Daily Journal\n\n**Date:** \n\n## Highlights\n- \n\n## Challenges\n- \n\n## Tomorrow's Goals\n- ",
+    code: "# Code Documentation\n\n## Overview\n\n## Functions\n\n```javascript\n\n```\n\n## Dependencies\n- ",
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      setContent(
+        (prev) =>
+          prev + "\n\n---\n**Imported File:** " + file.name + "\n\n" + text
+      );
+    };
+    reader.readAsText(file);
+  };
+
+  const applyTemplate = (type) => {
+    if (window.confirm("This will replace current content. Continue?")) {
+      setContent(templates[type]);
+      setShowTemplates(false);
+    }
+  };
 
   const handleSummarize = async () => {
     if (!content.trim()) return;
@@ -70,6 +105,57 @@ const Notes = () => {
           >
             <span className="font-serif italic font-bold">∑</span>
           </button>
+
+          <div className="w-px h-4 bg-white/10 mx-1"></div>
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors"
+            title="Upload File"
+          >
+            <Upload size={16} />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".txt,.md,.js,.json,.csv"
+          />
+
+          <div className="relative">
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-nexus-teal transition-colors flex items-center gap-1"
+              title="Templates"
+            >
+              <LayoutTemplate size={16} />
+              <ChevronDown size={10} />
+            </button>
+
+            {showTemplates && (
+              <div className="absolute top-full left-0 mt-1 w-40 bg-gray-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                <button
+                  onClick={() => applyTemplate("meeting")}
+                  className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Meeting Notes
+                </button>
+                <button
+                  onClick={() => applyTemplate("journal")}
+                  className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Daily Journal
+                </button>
+                <button
+                  onClick={() => applyTemplate("code")}
+                  className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  Code Docs
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         <button
           onClick={handleExport}
