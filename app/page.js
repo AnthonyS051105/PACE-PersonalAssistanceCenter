@@ -71,14 +71,24 @@ const App = () => {
     );
   }, [accentColor]);
 
-  const [cardColors, setCardColors] = useState({
-    monitor: "#65bbbd",
-    ai: "#732adf",
-    tasks: "#732adf",
-    vault: "#732adf",
-    agenda: "#65bbbd",
-    notes: "#ffffff",
+  const [cardColors, setCardColors] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nexus_card_colors");
+      if (saved) return JSON.parse(saved);
+    }
+    return {
+      monitor: "#65bbbd",
+      ai: "#732adf",
+      tasks: "#732adf",
+      vault: "#732adf",
+      agenda: "#65bbbd",
+      notes: "#ffffff",
+    };
   });
+
+  useEffect(() => {
+    localStorage.setItem("nexus_card_colors", JSON.stringify(cardColors));
+  }, [cardColors]);
 
   const hexToRgba = (hex, alpha = 0.3) => {
     let c;

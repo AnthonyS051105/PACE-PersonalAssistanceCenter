@@ -54,7 +54,10 @@ const BentoCard = ({
       {/* Customization Overlay */}
       {isCustomizing && (
         <div className="absolute top-4 right-4 z-50">
-          <div className="relative p-2 bg-black/50 rounded-full hover:bg-white/20 transition-colors text-white border border-white/10 shadow-lg backdrop-blur-md cursor-pointer">
+          <div
+            className="relative p-2 bg-black/50 rounded-full hover:bg-white/20 transition-colors text-white border border-white/10 shadow-lg backdrop-blur-md cursor-pointer"
+            title="Change Glow Color"
+          >
             <Palette size={16} />
             <input
               type="color"
