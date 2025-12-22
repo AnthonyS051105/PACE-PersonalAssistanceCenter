@@ -345,7 +345,13 @@ const AIChat = () => {
                             {...props}
                           />
                         ),
-                        code: ({ node, inline, className, children, ...props }) => (
+                        code: ({
+                          node,
+                          inline,
+                          className,
+                          children,
+                          ...props
+                        }) => (
                           <CodeBlock
                             inline={inline}
                             className={className}

@@ -188,10 +188,12 @@ const App = () => {
 
   // Search Logic
   const [searchResults, setSearchResults] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      setSelectedIndex(-1);
       return;
     }
 
@@ -245,6 +247,7 @@ const App = () => {
     }
 
     setSearchResults(results);
+    setSelectedIndex(-1);
   }, [searchQuery, tasks, events, vaultItems, noteContent]);
 
   const handleSearchResultClick = (result) => {
@@ -346,6 +349,22 @@ const App = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (searchResults.length === 0) return;
+
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setSelectedIndex((prev) =>
+                    prev < searchResults.length - 1 ? prev + 1 : prev
+                  );
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+                } else if (e.key === "Enter" && selectedIndex >= 0) {
+                  e.preventDefault();
+                  handleSearchResultClick(searchResults[selectedIndex]);
+                }
+              }}
               placeholder="Search ACE..."
               className="w-full bg-input-bg border border-card-border rounded-xl py-2.5 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-nexus-teal transition-all"
             />
@@ -377,11 +396,15 @@ const App = () => {
                     <div className="text-[10px] font-bold text-text-secondary uppercase tracking-wider px-2 py-1 mb-1">
                       Best Matches
                     </div>
-                    {searchResults.map((result) => (
+                    {searchResults.map((result, index) => (
                       <button
                         key={`${result.type}-${result.id}`}
                         onClick={() => handleSearchResultClick(result)}
-                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-left group"
+                        className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left group ${
+                          index === selectedIndex
+                            ? "bg-white/10"
+                            : "hover:bg-white/5"
+                        }`}
                       >
                         <div className="p-2 rounded-lg bg-input-bg text-nexus-teal group-hover:bg-nexus-teal group-hover:text-nexus-deep transition-colors">
                           {result.type === "task" && <CheckSquare size={14} />}
@@ -694,7 +717,11 @@ const App = () => {
                   onColorChange={(c) => handleColorChange("agenda", c)}
                   className="h-[500px]"
                 >
-                  <Agenda searchQuery={searchQuery} events={events} />
+                  <Agenda
+                    searchQuery={searchQuery}
+                    events={events}
+                    setEvents={setEvents}
+                  />
                 </BentoCard>
 
                 {/* 5. Notes (Wide, Tall) */}
@@ -734,7 +761,12 @@ const App = () => {
                   Full Timeline
                 </h2>
                 <div className="flex-1 overflow-hidden">
-                  <Agenda searchQuery={searchQuery} events={events} />
+                  <Agenda
+                    searchQuery={searchQuery}
+                    events={events}
+                    setEvents={setEvents}
+                    isFullPage={true}
+                  />
                 </div>
               </motion.div>
             )}
