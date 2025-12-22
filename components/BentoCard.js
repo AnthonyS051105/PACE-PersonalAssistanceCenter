@@ -18,6 +18,7 @@ const BentoCard = ({
 }) => {
   return (
     <motion.div
+      aria-label={title}
       title={
         onTripleClick ? "Triple-click card or click title to expand" : undefined
       }
