@@ -74,7 +74,7 @@ const App = () => {
   const [cardColors, setCardColors] = useState({
     monitor: "#65bbbd",
     ai: "#732adf",
-    tasks: "#ff6464",
+    tasks: "#732adf",
     vault: "#732adf",
     agenda: "#65bbbd",
     notes: "#ffffff",

@@ -26,7 +26,7 @@ const BentoCard = ({
       }}
       className={`
         relative group overflow-hidden rounded-3xl 
-        bg-card-bg border border-card-border 
+        border border-card-border 
         backdrop-blur-xl transition-all duration-300 ease-out
         hover:scale-[1.01] hover:border-nexus-purple/30
         shadow-[0_0_0_1px_inset_var(--card-border)]
@@ -36,6 +36,7 @@ const BentoCard = ({
       `}
       style={{
         "--glow-color": glowColor,
+        background: `linear-gradient(to bottom, color-mix(in srgb, ${glowColor}, black 40%), transparent 80%)`,
       }}
       {...props}
     >
