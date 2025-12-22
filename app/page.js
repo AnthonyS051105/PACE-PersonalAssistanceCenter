@@ -91,6 +91,26 @@ const App = () => {
     localStorage.setItem("nexus_card_colors", JSON.stringify(cardColors));
   }, [cardColors]);
 
+  // Layout State for Static Widgets
+  const [layout, setLayout] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nexus_layout");
+      if (saved) return JSON.parse(saved);
+    }
+    return {
+      monitor: { col: 4, row: 1 },
+      ai: { col: 2, row: 1 },
+      tasks: { col: 1, row: 1 },
+      vault: { col: 1, row: 1 },
+      agenda: { col: 1, row: 1 },
+      notes: { col: 3, row: 1 },
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("nexus_layout", JSON.stringify(layout));
+  }, [layout]);
+
   const hexToRgba = (hex, alpha = 0.3) => {
     let c;
     if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
@@ -126,8 +146,8 @@ const App = () => {
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardData, setNewCardData] = useState({
     title: "",
-    colSpan: "md:col-span-1",
-    rowSpan: "md:row-span-1",
+    colSpan: 1,
+    rowSpan: 1,
     color: "#732adf",
     content: "",
   });
@@ -146,8 +166,8 @@ const App = () => {
     setIsAddingCard(false);
     setNewCardData({
       title: "",
-      colSpan: "md:col-span-1",
-      rowSpan: "md:row-span-1",
+      colSpan: 1,
+      rowSpan: 1,
       color: "#732adf",
       content: "",
     });
@@ -165,6 +185,21 @@ const App = () => {
 
   const handleUpdateCardColor = (id, color) => {
     setCustomCards(customCards.map((c) => (c.id === id ? { ...c, color } : c)));
+  };
+
+  const handleResize = (id, type, newCol, newRow) => {
+    if (type === "static") {
+      setLayout((prev) => ({
+        ...prev,
+        [id]: { col: newCol, row: newRow },
+      }));
+    } else {
+      setCustomCards((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, colSpan: newCol, rowSpan: newRow } : c
+        )
+      );
+    }
   };
 
   useEffect(() => {
@@ -645,7 +680,7 @@ const App = () => {
                     {/* Card Glow Toggle */}
                     <div>
                       <label className="text-xs text-text-secondary mb-2 block">
-                        Card Customization
+                        Dashboard Personalization
                       </label>
                       <div className="flex gap-2">
                         <button
@@ -659,8 +694,8 @@ const App = () => {
                           }`}
                         >
                           {customizationMode
-                            ? "Done Customizing"
-                            : "Edit Card Glows"}
+                            ? "Save Changes"
+                            : "Edit Layout & Colors"}
                         </button>
                         <button
                           onClick={() => {
@@ -700,13 +735,14 @@ const App = () => {
                 {/* 0. System Monitor (Full Width, Short) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan="md:col-span-4"
-                  rowSpan="md:row-span-1"
-                  className="h-[160px]"
+                  colSpan={`md:col-span-${layout.monitor.col}`}
+                  rowSpan={`md:row-span-${layout.monitor.row}`}
+                  className="min-h-[160px]"
                   glowColor={hexToRgba(cardColors.monitor, 0.2)}
                   isCustomizing={customizationMode}
                   pickerColor={cardColors.monitor}
                   onColorChange={(c) => handleColorChange("monitor", c)}
+                  onResize={(c, r) => handleResize("monitor", "static", c, r)}
                 >
                   <SystemMonitor tasks={tasks} />
                 </BentoCard>
@@ -714,8 +750,8 @@ const App = () => {
                 {/* 1. AI Core (Wide, Short) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan="md:col-span-2"
-                  rowSpan="md:row-span-1"
+                  colSpan={`md:col-span-${layout.ai.col}`}
+                  rowSpan={`md:row-span-${layout.ai.row}`}
                   title="A.C.E"
                   onTripleClick={() => setActiveTab("ai")}
                   icon={
@@ -732,7 +768,8 @@ const App = () => {
                   isCustomizing={customizationMode}
                   pickerColor={cardColors.ai}
                   onColorChange={(c) => handleColorChange("ai", c)}
-                  className="h-[500px]"
+                  onResize={(c, r) => handleResize("ai", "static", c, r)}
+                  className="min-h-[500px]"
                 >
                   <AIChat />
                 </BentoCard>
@@ -740,8 +777,8 @@ const App = () => {
                 {/* 2. Tasks (Standard) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan="md:col-span-1"
-                  rowSpan="md:row-span-1"
+                  colSpan={`md:col-span-${layout.tasks.col}`}
+                  rowSpan={`md:row-span-${layout.tasks.row}`}
                   title="Missions"
                   onTripleClick={() => setActiveTab("tasks")}
                   icon={<CheckSquare />}
@@ -749,7 +786,8 @@ const App = () => {
                   isCustomizing={customizationMode}
                   pickerColor={cardColors.tasks}
                   onColorChange={(c) => handleColorChange("tasks", c)}
-                  className="h-[500px]"
+                  onResize={(c, r) => handleResize("tasks", "static", c, r)}
+                  className="min-h-[500px]"
                 >
                   <Tasks
                     tasks={tasks}
@@ -762,8 +800,8 @@ const App = () => {
                 {/* 3. Quick Vault (Standard) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan="md:col-span-1"
-                  rowSpan="md:row-span-1"
+                  colSpan={`md:col-span-${layout.vault.col}`}
+                  rowSpan={`md:row-span-${layout.vault.row}`}
                   title="Data Vault"
                   onTripleClick={() => setActiveTab("vault")}
                   icon={<Database />}
@@ -771,7 +809,8 @@ const App = () => {
                   isCustomizing={customizationMode}
                   pickerColor={cardColors.vault}
                   onColorChange={(c) => handleColorChange("vault", c)}
-                  className="h-[500px]"
+                  onResize={(c, r) => handleResize("vault", "static", c, r)}
+                  className="min-h-[500px]"
                 >
                   <Vault
                     searchQuery={searchQuery}
@@ -783,8 +822,8 @@ const App = () => {
                 {/* 4. Agenda (Tall) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan="md:col-span-1"
-                  rowSpan="md:row-span-1"
+                  colSpan={`md:col-span-${layout.agenda.col}`}
+                  rowSpan={`md:row-span-${layout.agenda.row}`}
                   title="Timeline"
                   onTripleClick={() => setActiveTab("calendar")}
                   icon={<Calendar />}
@@ -792,7 +831,8 @@ const App = () => {
                   isCustomizing={customizationMode}
                   pickerColor={cardColors.agenda}
                   onColorChange={(c) => handleColorChange("agenda", c)}
-                  className="h-[500px]"
+                  onResize={(c, r) => handleResize("agenda", "static", c, r)}
+                  className="min-h-[500px]"
                 >
                   <Agenda
                     searchQuery={searchQuery}
@@ -804,8 +844,8 @@ const App = () => {
                 {/* 5. Notes (Wide, Tall) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan="md:col-span-3"
-                  rowSpan="md:row-span-1"
+                  colSpan={`md:col-span-${layout.notes.col}`}
+                  rowSpan={`md:row-span-${layout.notes.row}`}
                   title="Neural Notes"
                   onTripleClick={() => setActiveTab("notes")}
                   icon={<LayoutGrid />}
@@ -813,6 +853,7 @@ const App = () => {
                   isCustomizing={customizationMode}
                   pickerColor={cardColors.notes}
                   onColorChange={(c) => handleColorChange("notes", c)}
+                  onResize={(c, r) => handleResize("notes", "static", c, r)}
                   className="h-[500px]"
                 >
                   <Notes
@@ -827,14 +868,15 @@ const App = () => {
                   <BentoCard
                     key={card.id}
                     variants={itemVariants}
-                    colSpan={card.colSpan}
-                    rowSpan={card.rowSpan}
+                    colSpan={`md:col-span-${card.colSpan}`}
+                    rowSpan={`md:row-span-${card.rowSpan}`}
                     title={card.title}
                     glowColor={hexToRgba(card.color, 0.3)}
                     isCustomizing={customizationMode}
                     pickerColor={card.color}
                     onColorChange={(c) => handleUpdateCardColor(card.id, c)}
                     onDelete={() => handleDeleteCard(card.id)}
+                    onResize={(c, r) => handleResize(card.id, "custom", c, r)}
                     className="min-h-[200px]"
                   >
                     <textarea
@@ -1018,32 +1060,20 @@ const App = () => {
                       onChange={(e) =>
                         setNewCardData({
                           ...newCardData,
-                          colSpan: e.target.value,
+                          colSpan: parseInt(e.target.value),
                         })
                       }
                     >
-                      <option
-                        value="md:col-span-1"
-                        className="bg-gray-900 text-white"
-                      >
+                      <option value={1} className="bg-gray-900 text-white">
                         Standard (1 Col)
                       </option>
-                      <option
-                        value="md:col-span-2"
-                        className="bg-gray-900 text-white"
-                      >
+                      <option value={2} className="bg-gray-900 text-white">
                         Wide (2 Cols)
                       </option>
-                      <option
-                        value="md:col-span-3"
-                        className="bg-gray-900 text-white"
-                      >
+                      <option value={3} className="bg-gray-900 text-white">
                         Extra Wide (3 Cols)
                       </option>
-                      <option
-                        value="md:col-span-4"
-                        className="bg-gray-900 text-white"
-                      >
+                      <option value={4} className="bg-gray-900 text-white">
                         Full Width (4 Cols)
                       </option>
                     </select>
@@ -1058,20 +1088,14 @@ const App = () => {
                       onChange={(e) =>
                         setNewCardData({
                           ...newCardData,
-                          rowSpan: e.target.value,
+                          rowSpan: parseInt(e.target.value),
                         })
                       }
                     >
-                      <option
-                        value="md:row-span-1"
-                        className="bg-gray-900 text-white"
-                      >
+                      <option value={1} className="bg-gray-900 text-white">
                         Standard
                       </option>
-                      <option
-                        value="md:row-span-2"
-                        className="bg-gray-900 text-white"
-                      >
+                      <option value={2} className="bg-gray-900 text-white">
                         Tall
                       </option>
                     </select>

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useRef } from "react";
 import { motion } from "framer-motion";
-import { Palette, Trash2 } from "lucide-react";
+import { Palette, Trash2, Maximize2 } from "lucide-react";
 
 const BentoCard = ({
   children,
@@ -14,11 +14,75 @@ const BentoCard = ({
   pickerColor = "#732adf",
   onColorChange,
   onDelete,
+  onResize,
   onTripleClick,
   ...props
 }) => {
+  const cardRef = useRef(null);
+
+  const handleResizeStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const card = cardRef.current;
+    if (!card) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = card.offsetWidth;
+    const startHeight = card.offsetHeight;
+
+    // Helper to extract number from class string or use number directly
+    const getSpan = (val) => {
+      if (typeof val === "number") return val;
+      const matchCol = val?.match(/col-span-(\d+)/);
+      if (matchCol) return parseInt(matchCol[1]);
+      const matchRow = val?.match(/row-span-(\d+)/);
+      if (matchRow) return parseInt(matchRow[1]);
+      return 1;
+    };
+
+    const currentCS = getSpan(colSpan);
+    const currentRS = getSpan(rowSpan);
+
+    // Estimate grid unit size
+    const unitWidth = startWidth / currentCS;
+    const unitHeight = startHeight / currentRS;
+
+    const handleMouseMove = (moveEvent) => {
+      // Optional: Live preview logic could go here
+    };
+
+    const handleMouseUp = (upEvent) => {
+      const deltaX = upEvent.clientX - startX;
+      const deltaY = upEvent.clientY - startY;
+
+      const newWidth = startWidth + deltaX;
+      const newHeight = startHeight + deltaY;
+
+      // Calculate new spans with thresholds (e.g., must drag at least half a unit)
+      // Using Math.round handles the "closest unit" logic
+      const newColSpan = Math.max(
+        1,
+        Math.min(4, Math.round(newWidth / unitWidth))
+      );
+      const newRowSpan = Math.max(1, Math.round(newHeight / unitHeight));
+
+      if (newColSpan !== currentCS || newRowSpan !== currentRS) {
+        onResize && onResize(newColSpan, newRowSpan);
+      }
+
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
   return (
     <motion.div
+      ref={cardRef}
       aria-label={title}
       title={
         onTripleClick ? "Triple-click card or click title to expand" : undefined
@@ -111,6 +175,16 @@ const BentoCard = ({
 
       {/* Interactive Shine  */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-linear-to-tr from-transparent via-white/5 to-transparent" />
+
+      {/* Resize Handle */}
+      {isCustomizing && onResize && (
+        <div
+          className="absolute bottom-2 right-2 z-50 p-1.5 bg-black/50 rounded-full hover:bg-white/20 text-white/50 hover:text-white cursor-se-resize backdrop-blur-md transition-colors"
+          onMouseDown={handleResizeStart}
+        >
+          <Maximize2 size={14} />
+        </div>
+      )}
     </motion.div>
   );
 };
