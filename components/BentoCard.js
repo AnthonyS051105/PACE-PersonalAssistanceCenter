@@ -18,6 +18,9 @@ const BentoCard = ({
 }) => {
   return (
     <motion.div
+      title={
+        onTripleClick ? "Triple-click card or click title to expand" : undefined
+      }
       onClick={(e) => {
         if (e.detail === 3 && onTripleClick) {
           onTripleClick();
@@ -67,7 +70,19 @@ const BentoCard = ({
         <div className="flex items-center gap-3 p-5 pb-2 z-10">
           {icon && <div className="text-nexus-teal">{icon}</div>}
           {title && (
-            <h3 className="text-lg font-semibold tracking-wide text-text-primary font-sans">
+            <h3
+              onClick={(e) => {
+                if (onTripleClick) {
+                  e.stopPropagation();
+                  onTripleClick();
+                }
+              }}
+              className={`text-lg font-semibold tracking-wide text-text-primary font-sans ${
+                onTripleClick
+                  ? "cursor-pointer hover:scale-[1.02] transition-transform"
+                  : ""
+              }`}
+            >
               {title}
             </h3>
           )}
