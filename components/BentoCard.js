@@ -32,10 +32,10 @@ const BentoCard = ({
         relative group overflow-hidden rounded-3xl 
         border border-card-border 
         backdrop-blur-xl transition-all duration-300 ease-out
-        hover:scale-[1.01] hover:border-nexus-purple/30
-        active:scale-[0.98]
+        hover:scale-[1.02] hover:-translate-y-1 hover:border-nexus-purple/30
+        active:scale-[0.98] active:translate-y-0
         shadow-[0_0_0_1px_inset_var(--card-border)]
-        hover:shadow-[0_0_30px_-5px_var(--glow-color)]
+        hover:shadow-[0_20px_40px_-10px_var(--glow-color)]
         flex flex-col
         ${colSpan} ${rowSpan} ${className}
       `}
