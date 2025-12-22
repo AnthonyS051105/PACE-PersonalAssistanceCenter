@@ -19,6 +19,7 @@ import {
   FileText,
   Link as LinkIcon,
   ArrowLeft,
+  Plus,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
@@ -111,6 +112,59 @@ const App = () => {
 
   const handleColorChange = (key, color) => {
     setCardColors((prev) => ({ ...prev, [key]: color }));
+  };
+
+  // Custom Cards State
+  const [customCards, setCustomCards] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nexus_custom_cards");
+      if (saved) return JSON.parse(saved);
+    }
+    return [];
+  });
+
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [newCardData, setNewCardData] = useState({
+    title: "",
+    colSpan: "md:col-span-1",
+    rowSpan: "md:row-span-1",
+    color: "#732adf",
+    content: "",
+  });
+
+  useEffect(() => {
+    localStorage.setItem("nexus_custom_cards", JSON.stringify(customCards));
+  }, [customCards]);
+
+  const handleAddCard = () => {
+    if (!newCardData.title) return;
+    const newCard = {
+      id: Date.now().toString(),
+      ...newCardData,
+    };
+    setCustomCards([...customCards, newCard]);
+    setIsAddingCard(false);
+    setNewCardData({
+      title: "",
+      colSpan: "md:col-span-1",
+      rowSpan: "md:row-span-1",
+      color: "#732adf",
+      content: "",
+    });
+  };
+
+  const handleDeleteCard = (id) => {
+    setCustomCards(customCards.filter((c) => c.id !== id));
+  };
+
+  const handleUpdateCardContent = (id, content) => {
+    setCustomCards(
+      customCards.map((c) => (c.id === id ? { ...c, content } : c))
+    );
+  };
+
+  const handleUpdateCardColor = (id, color) => {
+    setCustomCards(customCards.map((c) => (c.id === id ? { ...c, color } : c)));
   };
 
   useEffect(() => {
@@ -593,18 +647,31 @@ const App = () => {
                       <label className="text-xs text-text-secondary mb-2 block">
                         Card Customization
                       </label>
-                      <button
-                        onClick={() => setCustomizationMode(!customizationMode)}
-                        className={`w-full py-2 rounded-lg text-xs font-bold border transition-all ${
-                          customizationMode
-                            ? "bg-nexus-purple/20 border-nexus-purple text-nexus-purple"
-                            : "bg-input-bg border-card-border text-text-secondary hover:text-text-primary"
-                        }`}
-                      >
-                        {customizationMode
-                          ? "Done Customizing"
-                          : "Edit Card Glows"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            setCustomizationMode(!customizationMode)
+                          }
+                          className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${
+                            customizationMode
+                              ? "bg-nexus-purple/20 border-nexus-purple text-nexus-purple"
+                              : "bg-input-bg border-card-border text-text-secondary hover:text-text-primary"
+                          }`}
+                        >
+                          {customizationMode
+                            ? "Done Customizing"
+                            : "Edit Card Glows"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowSettings(false);
+                            setIsAddingCard(true);
+                          }}
+                          className="flex-1 py-2 rounded-lg text-xs font-bold border border-nexus-teal/30 text-nexus-teal hover:bg-nexus-teal/10 transition-all flex items-center justify-center gap-1"
+                        >
+                          <Plus size={14} /> Add Card
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -754,6 +821,32 @@ const App = () => {
                     setContent={setNoteContent}
                   />
                 </BentoCard>
+
+                {/* Custom Cards */}
+                {customCards.map((card) => (
+                  <BentoCard
+                    key={card.id}
+                    variants={itemVariants}
+                    colSpan={card.colSpan}
+                    rowSpan={card.rowSpan}
+                    title={card.title}
+                    glowColor={hexToRgba(card.color, 0.3)}
+                    isCustomizing={customizationMode}
+                    pickerColor={card.color}
+                    onColorChange={(c) => handleUpdateCardColor(card.id, c)}
+                    onDelete={() => handleDeleteCard(card.id)}
+                    className="min-h-[200px]"
+                  >
+                    <textarea
+                      className="w-full h-full bg-transparent border-none resize-none focus:outline-none text-text-secondary text-sm p-2"
+                      placeholder="Type something..."
+                      value={card.content}
+                      onChange={(e) =>
+                        handleUpdateCardContent(card.id, e.target.value)
+                      }
+                    />
+                  </BentoCard>
+                ))}
               </motion.div>
             )}
 
@@ -871,6 +964,154 @@ const App = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Add Card Modal */}
+      <AnimatePresence>
+        {isAddingCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-nexus-deep w-full max-w-md rounded-2xl p-6 border border-white/10 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">Add New Card</h3>
+                <button
+                  onClick={() => setIsAddingCard(false)}
+                  className="p-1 hover:bg-white/10 rounded-full text-text-secondary hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-text-secondary font-bold mb-2 block">
+                    Card Title
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="My Custom Card"
+                    className="w-full bg-input-bg border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-nexus-purple transition-colors"
+                    value={newCardData.title}
+                    onChange={(e) =>
+                      setNewCardData({ ...newCardData, title: e.target.value })
+                    }
+                    autoFocus
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs uppercase tracking-wider text-text-secondary font-bold mb-2 block">
+                      Width
+                    </label>
+                    <select
+                      className="w-full bg-input-bg border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-nexus-purple transition-colors appearance-none"
+                      value={newCardData.colSpan}
+                      onChange={(e) =>
+                        setNewCardData({
+                          ...newCardData,
+                          colSpan: e.target.value,
+                        })
+                      }
+                    >
+                      <option
+                        value="md:col-span-1"
+                        className="bg-gray-900 text-white"
+                      >
+                        Standard (1 Col)
+                      </option>
+                      <option
+                        value="md:col-span-2"
+                        className="bg-gray-900 text-white"
+                      >
+                        Wide (2 Cols)
+                      </option>
+                      <option
+                        value="md:col-span-3"
+                        className="bg-gray-900 text-white"
+                      >
+                        Extra Wide (3 Cols)
+                      </option>
+                      <option
+                        value="md:col-span-4"
+                        className="bg-gray-900 text-white"
+                      >
+                        Full Width (4 Cols)
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs uppercase tracking-wider text-text-secondary font-bold mb-2 block">
+                      Height
+                    </label>
+                    <select
+                      className="w-full bg-input-bg border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-nexus-purple transition-colors appearance-none"
+                      value={newCardData.rowSpan}
+                      onChange={(e) =>
+                        setNewCardData({
+                          ...newCardData,
+                          rowSpan: e.target.value,
+                        })
+                      }
+                    >
+                      <option
+                        value="md:row-span-1"
+                        className="bg-gray-900 text-white"
+                      >
+                        Standard
+                      </option>
+                      <option
+                        value="md:row-span-2"
+                        className="bg-gray-900 text-white"
+                      >
+                        Tall
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-text-secondary font-bold mb-2 block">
+                    Glow Color
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-none"
+                      value={newCardData.color}
+                      onChange={(e) =>
+                        setNewCardData({
+                          ...newCardData,
+                          color: e.target.value,
+                        })
+                      }
+                    />
+                    <span className="text-sm text-text-secondary">
+                      {newCardData.color}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleAddCard}
+                  disabled={!newCardData.title}
+                  className="w-full bg-nexus-purple hover:bg-nexus-purple/80 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-nexus-purple/20 mt-4"
+                >
+                  Create Card
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

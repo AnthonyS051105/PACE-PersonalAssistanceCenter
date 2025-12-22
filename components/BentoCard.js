@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Palette } from "lucide-react";
+import { Palette, Trash2 } from "lucide-react";
 
 const BentoCard = ({
   children,
@@ -13,6 +13,7 @@ const BentoCard = ({
   isCustomizing = false,
   pickerColor = "#732adf",
   onColorChange,
+  onDelete,
   onTripleClick,
   ...props
 }) => {
@@ -53,7 +54,7 @@ const BentoCard = ({
 
       {/* Customization Overlay */}
       {isCustomizing && (
-        <div className="absolute top-4 right-4 z-50">
+        <div className="absolute top-4 right-4 z-50 flex gap-2">
           <div
             className="relative p-2 bg-black/50 rounded-full hover:bg-white/20 transition-colors text-white border border-white/10 shadow-lg backdrop-blur-md cursor-pointer"
             title="Change Glow Color"
@@ -66,6 +67,18 @@ const BentoCard = ({
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
           </div>
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-full text-red-200 border border-red-500/30 shadow-lg backdrop-blur-md transition-colors"
+              title="Delete Card"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       )}
 
