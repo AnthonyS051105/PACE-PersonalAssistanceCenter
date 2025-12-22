@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   Download,
   Image as ImageIcon,
@@ -12,6 +13,9 @@ import {
   Save,
 } from "lucide-react";
 import { summarizeNotes } from "../lib/geminiService";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 const Notes = ({ searchQuery = "", content, setContent }) => {
   const contentRef = useRef(content);
@@ -54,10 +58,10 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
 
   const templates = {
     meeting:
-      "# Meeting Notes\n\n**Date:** \n**Attendees:** \n\n## Agenda\n1. \n2. \n\n## Action Items\n- [ ] ",
+      "<h1>Meeting Notes</h1><p><strong>Date:</strong> </p><p><strong>Attendees:</strong> </p><h2>Agenda</h2><ol><li></li><li></li></ol><h2>Action Items</h2><ul><li></li></ul>",
     journal:
-      "# Daily Journal\n\n**Date:** \n\n## Highlights\n- \n\n## Challenges\n- \n\n## Tomorrow's Goals\n- ",
-    code: "# Code Documentation\n\n## Overview\n\n## Functions\n\n```javascript\n\n```\n\n## Dependencies\n- ",
+      "<h1>Daily Journal</h1><p><strong>Date:</strong> </p><h2>Highlights</h2><ul><li></li></ul><h2>Challenges</h2><ul><li></li></ul><h2>Tomorrow's Goals</h2><ul><li></li></ul>",
+    code: "<h1>Code Documentation</h1><h2>Overview</h2><h2>Functions</h2><pre><code></code></pre><h2>Dependencies</h2><ul><li></li></ul>",
   };
 
   const handleFileUpload = (event) => {
@@ -83,11 +87,16 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
   };
 
   const handleSummarize = async () => {
-    if (!content.trim()) return;
+    // Strip HTML tags for AI processing
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = content;
+    const plainText = tempDiv.textContent || tempDiv.innerText || "";
+
+    if (!plainText.trim()) return;
     setIsSummarizing(true);
     try {
-      const summary = await summarizeNotes(content);
-      setContent((prev) => prev + "\n\n### AI Summary\n" + summary);
+      const summary = await summarizeNotes(plainText);
+      setContent((prev) => prev + "<h3>AI Summary</h3><p>" + summary + "</p>");
     } catch (error) {
       console.error("Summarization failed", error);
     } finally {
@@ -247,12 +256,21 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
         </div>
       </div>
 
-      <textarea
-        className="flex-1 bg-black/10 rounded-xl p-4 text-sm text-gray-300 font-mono focus:outline-none focus:ring-1 focus:ring-nexus-purple/50 resize-none leading-relaxed w-full h-full overflow-y-auto"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        spellCheck={false}
-      />
+      <div className="flex-1 bg-black/10 rounded-xl overflow-hidden flex flex-col">
+        <ReactQuill
+          theme="snow"
+          value={content}
+          onChange={setContent}
+          modules={{
+            toolbar: [
+              [{ header: [1, 2, false] }],
+              ["bold", "italic", "code-block"],
+              [{ list: "ordered" }, { list: "bullet" }],
+            ],
+          }}
+          className="h-full flex flex-col"
+        />
+      </div>
 
       <div className="absolute bottom-2 right-4 text-[10px] text-gray-600">
         Markdown Supported

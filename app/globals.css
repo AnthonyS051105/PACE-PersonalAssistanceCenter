@@ -129,3 +129,78 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Quill Editor Customization */
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.ql-editor {
+  padding: 1rem;
+}
+
+.ql-editor.ql-blank::before {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Toolbar Icons */
+.ql-snow .ql-stroke {
+  stroke: var(--text-secondary) !important;
+}
+
+.ql-snow .ql-fill {
+  fill: var(--text-secondary) !important;
+}
+
+.ql-snow .ql-picker {
+  color: var(--text-secondary) !important;
+}
+
+.ql-snow .ql-picker-options {
+  background-color: var(--nexus-deep) !important;
+  border-color: var(--card-border) !important;
+}
+
+/* Active States */
+.ql-snow .ql-active .ql-stroke {
+  stroke: var(--nexus-teal) !important;
+}
+
+.ql-snow .ql-active .ql-fill {
+  fill: var(--nexus-teal) !important;
+}
+
+/* Headings */
+.ql-editor h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--nexus-purple);
+  margin-bottom: 0.5rem;
+}
+
+.ql-editor h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--nexus-teal);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Code Blocks */
+.ql-snow .ql-code-block-container {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 0.5rem;
+}

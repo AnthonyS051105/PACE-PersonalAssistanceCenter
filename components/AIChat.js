@@ -8,11 +8,139 @@ import {
   Code,
   Terminal,
   Zap,
+  Copy,
+  Check,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import { generateAIResponse } from "../lib/geminiService";
+
+const SyntaxHighlight = ({ code }) => {
+  if (!code) return null;
+
+  // Tokenizer Regex
+  const tokenRegex =
+    /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\/\/.*|\/\*[\s\S]*?\*\/)|(\b(?:const|let|var|function|return|if|else|for|while|import|export|from|class|extends|try|catch|async|await|new|this|super|default|case|switch|break|continue|true|false|null|undefined)\b)|(\b\d+\b)|(\b[A-Z][a-zA-Z0-9_]*\b)|([^"'/a-zA-Z0-9_]+|[a-zA-Z0-9_]+)/g;
+
+  const tokens = [];
+  let match;
+  let lastIndex = 0;
+
+  while ((match = tokenRegex.exec(code)) !== null) {
+    const [fullMatch, string, comment, keyword, number, type, other] = match;
+    const key = lastIndex++;
+
+    if (string) {
+      tokens.push(
+        <span key={key} className="text-emerald-400">
+          {string}
+        </span>
+      );
+    } else if (comment) {
+      tokens.push(
+        <span key={key} className="text-gray-500 italic">
+          {comment}
+        </span>
+      );
+    } else if (keyword) {
+      tokens.push(
+        <span key={key} className="text-pink-400">
+          {keyword}
+        </span>
+      );
+    } else if (number) {
+      tokens.push(
+        <span key={key} className="text-amber-400">
+          {number}
+        </span>
+      );
+    } else if (type) {
+      tokens.push(
+        <span key={key} className="text-yellow-200">
+          {type}
+        </span>
+      );
+    } else {
+      tokens.push(
+        <span key={key} className="text-gray-300">
+          {fullMatch}
+        </span>
+      );
+    }
+  }
+
+  return <>{tokens}</>;
+};
+
+const preprocessMarkdown = (text) => {
+  if (!text) return "";
+  let processed = text;
+
+  // Fix indentation for nested lists (convert 2-3 spaces to 4 spaces)
+  processed = processed.replace(/^ {2,3}([-*+]|\d+\.) /gm, "    $1 ");
+
+  // Group consecutive blockquotes (remove empty lines between > lines to ensure single block)
+  processed = processed.replace(/(^>.*)(\n\s*\n)(>)/gm, "$1\n$3");
+
+  return processed;
+};
+
+const CodeBlock = ({ inline, className, children, ...props }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  if (inline) {
+    return (
+      <code
+        className="bg-black/30 px-1.5 py-0.5 rounded text-nexus-teal font-mono text-xs border border-white/5"
+        {...props}
+      >
+        {children}
+      </code>
+    );
+  }
+
+  const codeContent = String(children).replace(/\n$/, "");
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(codeContent);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <div className="relative group my-4 rounded-xl overflow-hidden border border-white/10 shadow-inner bg-black/40">
+      <div className="flex justify-between items-center px-4 py-2 bg-white/5 border-b border-white/5">
+        <span className="text-xs text-text-secondary font-mono">
+          {className ? className.replace("language-", "") : "code"}
+        </span>
+        <button
+          onClick={handleCopy}
+          className="p-1.5 rounded-lg hover:bg-white/10 text-text-secondary hover:text-white transition-colors"
+          title="Copy code"
+        >
+          {isCopied ? (
+            <Check size={14} className="text-emerald-400" />
+          ) : (
+            <Copy size={14} />
+          )}
+        </button>
+      </div>
+      <div className="p-4 overflow-x-auto">
+        <pre
+          className="font-mono text-xs text-gray-300 leading-relaxed"
+          {...props}
+        >
+          <SyntaxHighlight code={codeContent} />
+        </pre>
+      </div>
+    </div>
+  );
+};
 
 const AIChat = () => {
   const [input, setInput] = useState("");
@@ -138,43 +266,64 @@ const AIChat = () => {
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
+                        h1: ({ node, ...props }) => (
+                          <h1
+                            className="text-lg font-bold text-white mt-6 mb-3 pb-2 border-b border-white/10"
+                            {...props}
+                          />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2
+                            className="text-base font-bold text-nexus-teal mt-5 mb-2"
+                            {...props}
+                          />
+                        ),
+                        h3: ({ node, ...props }) => (
+                          <h3
+                            className="text-sm font-bold text-text-primary mt-4 mb-2"
+                            {...props}
+                          />
+                        ),
                         p: ({ node, ...props }) => (
                           <p className="mb-3 leading-7 last:mb-0" {...props} />
                         ),
                         ul: ({ node, ...props }) => (
                           <ul
-                            className="list-disc list-outside mb-3 space-y-1 pl-4"
+                            className="list-disc list-outside mb-4 space-y-2 pl-5 marker:text-nexus-purple [&_ul]:list-[circle] [&_ul_ul]:list-[square]"
                             {...props}
                           />
                         ),
                         ol: ({ node, ...props }) => (
                           <ol
-                            className="list-decimal list-outside mb-3 space-y-1 pl-4"
+                            className="list-decimal list-outside mb-4 space-y-2 pl-5 marker:text-nexus-teal [&_ol]:list-[lower-alpha] [&_ol_ol]:list-[lower-roman]"
                             {...props}
                           />
                         ),
                         li: ({ node, ...props }) => (
-                          <li className="text-text-primary pl-1" {...props} />
+                          <li
+                            className="text-text-primary pl-1 leading-relaxed"
+                            {...props}
+                          />
                         ),
                         blockquote: ({ node, ...props }) => (
-                          <blockquote className="border-l-4 border-nexus-purple bg-input-bg p-3 my-4 rounded-r-lg relative">
-                            <div className="flex gap-2">
+                          <blockquote className="border-l-4 border-nexus-purple bg-white/5 p-4 my-4 rounded-r-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-2 opacity-10">
+                              <Quote size={40} className="fill-nexus-purple" />
+                            </div>
+                            <div className="relative z-10 flex gap-3">
                               <Quote
-                                size={16}
-                                className="text-nexus-purple shrink-0 mt-1"
+                                size={20}
+                                className="text-nexus-purple shrink-0 mt-1 fill-nexus-purple"
                               />
                               <div
-                                className="italic text-text-secondary"
+                                className="italic text-text-secondary text-sm leading-relaxed"
                                 {...props}
                               />
                             </div>
                           </blockquote>
                         ),
                         hr: ({ node, ...props }) => (
-                          <hr
-                            className="border-t border-card-border my-6"
-                            {...props}
-                          />
+                          <div className="my-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent border-none" />
                         ),
                         strong: ({ node, ...props }) => (
                           <strong
@@ -196,34 +345,18 @@ const AIChat = () => {
                             {...props}
                           />
                         ),
-                        code: ({
-                          node,
-                          inline,
-                          className,
-                          children,
-                          ...props
-                        }) => {
-                          return inline ? (
-                            <code
-                              className="bg-black/30 px-1 py-0.5 rounded text-nexus-teal font-mono text-xs"
-                              {...props}
-                            >
-                              {children}
-                            </code>
-                          ) : (
-                            <div className="bg-black/30 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
-                              <code
-                                className="font-mono text-xs text-gray-300 leading-relaxed"
-                                {...props}
-                              >
-                                {children}
-                              </code>
-                            </div>
-                          );
-                        },
+                        code: ({ node, inline, className, children, ...props }) => (
+                          <CodeBlock
+                            inline={inline}
+                            className={className}
+                            {...props}
+                          >
+                            {children}
+                          </CodeBlock>
+                        ),
                       }}
                     >
-                      {msg.text}
+                      {preprocessMarkdown(msg.text)}
                     </ReactMarkdown>
                   </div>
                 </div>
