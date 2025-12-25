@@ -735,8 +735,8 @@ const App = () => {
                 {/* 0. System Monitor (Full Width, Short) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan={`md:col-span-${layout.monitor.col}`}
-                  rowSpan={`md:row-span-${layout.monitor.row}`}
+                  colSpan={layout.monitor.col}
+                  rowSpan={layout.monitor.row}
                   className="min-h-[160px]"
                   glowColor={hexToRgba(cardColors.monitor, 0.2)}
                   isCustomizing={customizationMode}
@@ -750,8 +750,8 @@ const App = () => {
                 {/* 1. AI Core (Wide, Short) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan={`md:col-span-${layout.ai.col}`}
-                  rowSpan={`md:row-span-${layout.ai.row}`}
+                  colSpan={layout.ai.col}
+                  rowSpan={layout.ai.row}
                   title="A.C.E"
                   onTripleClick={() => setActiveTab("ai")}
                   icon={
@@ -777,8 +777,8 @@ const App = () => {
                 {/* 2. Tasks (Standard) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan={`md:col-span-${layout.tasks.col}`}
-                  rowSpan={`md:row-span-${layout.tasks.row}`}
+                  colSpan={layout.tasks.col}
+                  rowSpan={layout.tasks.row}
                   title="Missions"
                   onTripleClick={() => setActiveTab("tasks")}
                   icon={<CheckSquare />}
@@ -800,8 +800,8 @@ const App = () => {
                 {/* 3. Quick Vault (Standard) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan={`md:col-span-${layout.vault.col}`}
-                  rowSpan={`md:row-span-${layout.vault.row}`}
+                  colSpan={layout.vault.col}
+                  rowSpan={layout.vault.row}
                   title="Data Vault"
                   onTripleClick={() => setActiveTab("vault")}
                   icon={<Database />}
@@ -822,8 +822,8 @@ const App = () => {
                 {/* 4. Agenda (Tall) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan={`md:col-span-${layout.agenda.col}`}
-                  rowSpan={`md:row-span-${layout.agenda.row}`}
+                  colSpan={layout.agenda.col}
+                  rowSpan={layout.agenda.row}
                   title="Timeline"
                   onTripleClick={() => setActiveTab("calendar")}
                   icon={<Calendar />}
@@ -844,8 +844,8 @@ const App = () => {
                 {/* 5. Notes (Wide, Tall) */}
                 <BentoCard
                   variants={itemVariants}
-                  colSpan={`md:col-span-${layout.notes.col}`}
-                  rowSpan={`md:row-span-${layout.notes.row}`}
+                  colSpan={layout.notes.col}
+                  rowSpan={layout.notes.row}
                   title="Neural Notes"
                   onTripleClick={() => setActiveTab("notes")}
                   icon={<LayoutGrid />}
@@ -868,8 +868,8 @@ const App = () => {
                   <BentoCard
                     key={card.id}
                     variants={itemVariants}
-                    colSpan={`md:col-span-${card.colSpan}`}
-                    rowSpan={`md:row-span-${card.rowSpan}`}
+                    colSpan={card.colSpan}
+                    rowSpan={card.rowSpan}
                     title={card.title}
                     glowColor={hexToRgba(card.color, 0.3)}
                     isCustomizing={customizationMode}

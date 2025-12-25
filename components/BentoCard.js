@@ -8,8 +8,8 @@ const BentoCard = ({
   title,
   icon,
   glowColor = "rgba(115, 42, 223, 0.5)", // Default purple
-  colSpan = "col-span-1",
-  rowSpan = "row-span-1",
+  colSpan = 1,
+  rowSpan = 1,
   isCustomizing = false,
   pickerColor = "#732adf",
   onColorChange,
@@ -18,6 +18,18 @@ const BentoCard = ({
   onTripleClick,
   ...props
 }) => {
+  // Parse colSpan and rowSpan to numbers if they're strings
+  const getSpanNumber = (val) => {
+    if (typeof val === "number") return val;
+    if (typeof val === "string") {
+      const match = val.match(/(\d+)/);
+      return match ? parseInt(match[1]) : 1;
+    }
+    return 1;
+  };
+
+  const colSpanNum = getSpanNumber(colSpan);
+  const rowSpanNum = getSpanNumber(rowSpan);
   const cardRef = useRef(null);
 
   const handleResizeStart = (e) => {
@@ -32,18 +44,8 @@ const BentoCard = ({
     const startWidth = card.offsetWidth;
     const startHeight = card.offsetHeight;
 
-    // Helper to extract number from class string or use number directly
-    const getSpan = (val) => {
-      if (typeof val === "number") return val;
-      const matchCol = val?.match(/col-span-(\d+)/);
-      if (matchCol) return parseInt(matchCol[1]);
-      const matchRow = val?.match(/row-span-(\d+)/);
-      if (matchRow) return parseInt(matchRow[1]);
-      return 1;
-    };
-
-    const currentCS = getSpan(colSpan);
-    const currentRS = getSpan(rowSpan);
+    const currentCS = colSpanNum;
+    const currentRS = rowSpanNum;
 
     // Estimate grid unit size
     const unitWidth = startWidth / currentCS;
@@ -102,11 +104,13 @@ const BentoCard = ({
         shadow-[0_0_0_1px_inset_var(--card-border)]
         hover:shadow-[0_20px_40px_-10px_var(--glow-color)]
         flex flex-col
-        ${colSpan} ${rowSpan} ${className}
+        ${className}
       `}
       style={{
         "--glow-color": glowColor,
         background: `linear-gradient(to bottom, color-mix(in srgb, ${glowColor}, black 40%), transparent 80%)`,
+        gridColumn: `span ${colSpanNum}`,
+        gridRow: `span ${rowSpanNum}`,
       }}
       {...props}
     >
