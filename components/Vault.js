@@ -28,6 +28,7 @@ import {
   Package,
   Filter,
   ChevronDown,
+  Download,
 } from "lucide-react";
 
 // Smart icon detection based on category name keywords
@@ -347,6 +348,29 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
     return category ? category.name : categoryId;
   };
 
+  const handleExportLinks = () => {
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      totalLinks: items.length,
+      categories: categories,
+      links: items,
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `vault-links-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="h-full flex flex-col">
       {viewMode === "add" ? (
@@ -517,7 +541,19 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
             ))}
           </div>
 
-          <p className="text-[10px] text-text-secondary text-center">
+          {/* Export Section */}
+          <div className="border-t border-card-border pt-3 mt-auto">
+            <button
+              onClick={handleExportLinks}
+              disabled={items.length === 0}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-input-bg border border-card-border rounded-lg text-xs text-text-secondary hover:text-nexus-teal hover:border-nexus-teal/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download size={14} />
+              <span>Export Links as JSON</span>
+            </button>
+          </div>
+
+          <p className="text-[10px] text-text-secondary text-center mt-2">
             Icons auto-detect based on category name keywords
           </p>
         </div>
