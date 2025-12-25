@@ -26,6 +26,8 @@ import {
   Database,
   Cloud,
   Package,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
 
 // Smart icon detection based on category name keywords
@@ -158,6 +160,8 @@ const getCategoryIcon = (categoryName, size = 16) => {
 const Vault = ({ searchQuery = "", items = [], setItems }) => {
   const [localSearch, setLocalSearch] = useState("");
   const [viewMode, setViewMode] = useState("list"); // "list" | "add" | "settings"
+  const [categoryFilter, setCategoryFilter] = useState("all"); // "all" or category id
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [newLink, setNewLink] = useState({
     title: "",
     url: "",
@@ -219,7 +223,9 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
     const matchesLocal =
       link.title.toLowerCase().includes(localSearch.toLowerCase()) ||
       link.category.toLowerCase().includes(localSearch.toLowerCase());
-    return matchesGlobal && matchesLocal;
+    const matchesCategory =
+      categoryFilter === "all" || link.category === categoryFilter;
+    return matchesGlobal && matchesLocal && matchesCategory;
   });
 
   const handleAdd = () => {
@@ -495,6 +501,71 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
                 className="w-full bg-input-bg border border-card-border rounded-lg py-2 pl-9 pr-3 text-xs text-text-primary focus:outline-none focus:border-nexus-teal transition-colors"
               />
             </div>
+            {/* Category Filter Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className={`flex items-center gap-1.5 px-3 py-2 bg-input-bg border rounded-lg text-xs transition-colors ${
+                  categoryFilter !== "all"
+                    ? "border-nexus-teal text-nexus-teal"
+                    : "border-card-border text-text-secondary hover:text-nexus-teal hover:border-nexus-teal/50"
+                }`}
+                title="Filter by Category"
+              >
+                <Filter size={14} />
+                <span className="hidden sm:inline">
+                  {categoryFilter === "all"
+                    ? "All"
+                    : getCategoryName(categoryFilter).length > 6
+                    ? getCategoryName(categoryFilter).substring(0, 6) + "..."
+                    : getCategoryName(categoryFilter)}
+                </span>
+                <ChevronDown
+                  size={12}
+                  className={`transition-transform ${
+                    showFilterDropdown ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {showFilterDropdown && (
+                <div className="absolute right-0 top-full mt-1 w-40 bg-[#1a1a2e] border border-card-border rounded-lg shadow-xl z-20 py-1 max-h-48 overflow-y-auto backdrop-blur-none">
+                  <button
+                    onClick={() => {
+                      setCategoryFilter("all");
+                      setShowFilterDropdown(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+                      categoryFilter === "all"
+                        ? "bg-nexus-teal/30 text-nexus-teal"
+                        : "text-text-primary hover:bg-white/10"
+                    }`}
+                  >
+                    <LinkIcon size={14} />
+                    <span>All Categories</span>
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setCategoryFilter(cat.id);
+                        setShowFilterDropdown(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+                        categoryFilter === cat.id
+                          ? "bg-nexus-teal/30 text-nexus-teal"
+                          : "text-text-primary hover:bg-white/10"
+                      }`}
+                    >
+                      {getCategoryIcon(cat.name, 14)}
+                      <span>{cat.name}</span>
+                      <span className="ml-auto text-[10px] opacity-70">
+                        {items.filter((i) => i.category === cat.id).length}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               onClick={() => setViewMode("settings")}
               className="p-2 bg-input-bg border border-card-border rounded-lg text-text-secondary hover:text-nexus-teal hover:border-nexus-teal/50 transition-colors"
@@ -503,6 +574,24 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
               <Settings size={14} />
             </button>
           </div>
+
+          {/* Active Filter Indicator */}
+          {categoryFilter !== "all" && (
+            <div className="flex items-center gap-2 mb-3 shrink-0">
+              <span className="text-[10px] text-text-secondary uppercase tracking-wide">Filtering by:</span>
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-nexus-purple/20 border border-nexus-purple/50 rounded-full text-xs text-nexus-purple">
+                {getCategoryIcon(getCategoryName(categoryFilter), 12)}
+                <span>{getCategoryName(categoryFilter)}</span>
+                <button
+                  onClick={() => setCategoryFilter("all")}
+                  className="ml-0.5 p-0.5 hover:bg-nexus-purple/30 rounded-full transition-colors"
+                  title="Clear filter"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
             {filteredLinks.map((item) => (
