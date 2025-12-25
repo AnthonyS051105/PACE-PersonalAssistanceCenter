@@ -578,7 +578,9 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
           {/* Active Filter Indicator */}
           {categoryFilter !== "all" && (
             <div className="flex items-center gap-2 mb-3 shrink-0">
-              <span className="text-[10px] text-text-secondary uppercase tracking-wide">Filtering by:</span>
+              <span className="text-[10px] text-text-secondary uppercase tracking-wide">
+                Filtering by:
+              </span>
               <div className="flex items-center gap-1.5 px-2 py-1 bg-nexus-purple/20 border border-nexus-purple/50 rounded-full text-xs text-nexus-purple">
                 {getCategoryIcon(getCategoryName(categoryFilter), 12)}
                 <span>{getCategoryName(categoryFilter)}</span>
