@@ -47,7 +47,13 @@ import Vault from "../components/Vault";
 import SystemMonitor from "../components/SystemMonitor";
 
 // Sortable Item Wrapper Component
-const SortableItem = ({ id, children, isCustomizing, colSpan = 1, rowSpan = 1 }) => {
+const SortableItem = ({
+  id,
+  children,
+  isCustomizing,
+  colSpan = 1,
+  rowSpan = 1,
+}) => {
   const {
     attributes,
     listeners,

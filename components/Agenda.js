@@ -9,7 +9,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const Agenda = ({ searchQuery = "", events = [], setEvents, isFullPage = false }) => {
+const Agenda = ({
+  searchQuery = "",
+  events = [],
+  setEvents,
+  isFullPage = false,
+}) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isAddingEvent, setIsAddingEvent] = useState(false);
@@ -303,7 +308,9 @@ const Agenda = ({ searchQuery = "", events = [], setEvents, isFullPage = false }
           >
             <div
               className={
-                isFullPage ? "w-full max-w-3xl mx-auto flex flex-col" : "contents"
+                isFullPage
+                  ? "w-full max-w-3xl mx-auto flex flex-col"
+                  : "contents"
               }
             >
               <div className="flex items-center justify-between mb-4">
@@ -368,7 +375,10 @@ const Agenda = ({ searchQuery = "", events = [], setEvents, isFullPage = false }
                       onChange={(e) => setNewEventType(e.target.value)}
                       onKeyDown={handleKeyDown}
                     >
-                      <option value="personal" className="bg-gray-900 text-white">
+                      <option
+                        value="personal"
+                        className="bg-gray-900 text-white"
+                      >
                         Personal
                       </option>
                       <option value="work" className="bg-gray-900 text-white">
@@ -377,7 +387,10 @@ const Agenda = ({ searchQuery = "", events = [], setEvents, isFullPage = false }
                       <option value="study" className="bg-gray-900 text-white">
                         Study
                       </option>
-                      <option value="meeting" className="bg-gray-900 text-white">
+                      <option
+                        value="meeting"
+                        className="bg-gray-900 text-white"
+                      >
                         Meeting
                       </option>
                     </select>

@@ -32,7 +32,7 @@ const BentoCard = ({
 
   const colSpanNum = getSpanNumber(colSpan);
   const rowSpanNum = getSpanNumber(rowSpan);
-  
+
   // Determine if card is in compact mode (small height)
   const isCompact = rowSpanNum < 1;
   const cardRef = useRef(null);
@@ -72,7 +72,7 @@ const BentoCard = ({
         1,
         Math.min(4, Math.round(newWidth / unitWidth))
       );
-      
+
       // Allow half-row increments (0.5, 1, 1.5, 2, etc.) for more flexible heights
       const rawRowSpan = newHeight / baseRowHeight;
       const newRowSpan = Math.max(0.5, Math.round(rawRowSpan * 2) / 2);
@@ -170,8 +170,16 @@ const BentoCard = ({
 
       {/* Header */}
       {(title || icon) && (
-        <div className={`flex items-center gap-3 ${isCompact ? "p-3 pb-1" : "p-5 pb-2"} z-10`}>
-          {icon && <div className={`text-nexus-teal ${isCompact ? "scale-75" : ""}`}>{icon}</div>}
+        <div
+          className={`flex items-center gap-3 ${
+            isCompact ? "p-3 pb-1" : "p-5 pb-2"
+          } z-10`}
+        >
+          {icon && (
+            <div className={`text-nexus-teal ${isCompact ? "scale-75" : ""}`}>
+              {icon}
+            </div>
+          )}
           {title && (
             <h3
               onClick={(e) => {
@@ -180,7 +188,9 @@ const BentoCard = ({
                   onTripleClick();
                 }
               }}
-              className={`${isCompact ? "text-sm" : "text-lg"} font-semibold tracking-wide text-text-primary font-sans ${
+              className={`${
+                isCompact ? "text-sm" : "text-lg"
+              } font-semibold tracking-wide text-text-primary font-sans ${
                 onTripleClick
                   ? "cursor-pointer hover:scale-[1.02] transition-transform"
                   : ""
@@ -193,8 +203,12 @@ const BentoCard = ({
       )}
 
       {/* Content - Responsive to card size */}
-      <div className={`flex-1 ${isCompact ? "p-3" : "p-5"} z-10 overflow-hidden overflow-y-auto relative`}>
-        {React.Children.map(children, child => {
+      <div
+        className={`flex-1 ${
+          isCompact ? "p-3" : "p-5"
+        } z-10 overflow-hidden overflow-y-auto relative`}
+      >
+        {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
             return React.cloneElement(child, { isCompact });
           }

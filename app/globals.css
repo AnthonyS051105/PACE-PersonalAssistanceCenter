@@ -25,7 +25,12 @@
   --nexus-deep: #f5f3ff; /* Light Purple / Lavender (Background) */
   --nexus-teal: #0d9488; /* Teal-600 */
   --nexus-dark: #cbd5e1; /* Slate-300 */
-  --nexus-glass: rgba(255, 255, 255, 0.05); /* Keep glass for some elements, but cards use card-bg */
+  --nexus-glass: rgba(
+    255,
+    255,
+    255,
+    0.05
+  ); /* Keep glass for some elements, but cards use card-bg */
   --nexus-glassBorder: rgba(0, 0, 0, 0.05);
   --background: #f5f3ff;
   --foreground: #0f172a; /* Slate-900 */
@@ -49,7 +54,7 @@
   --color-nexus-glass: var(--nexus-glass);
   --color-nexus-glassBorder: var(--nexus-glassBorder);
   --color-foreground: var(--foreground);
-  
+
   /* Semantic Colors */
   --color-card-bg: var(--card-bg);
   --color-card-border: var(--card-border);
