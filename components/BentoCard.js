@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { motion } from "framer-motion";
-import { Palette, Trash2, Maximize2 } from "lucide-react";
+import { Palette, Trash2, Maximize2, GripVertical } from "lucide-react";
 
 const BentoCard = ({
   children,
@@ -16,20 +16,25 @@ const BentoCard = ({
   onDelete,
   onResize,
   onTripleClick,
+  dragHandleProps,
+  isDragging = false,
   ...props
 }) => {
   // Parse colSpan and rowSpan to numbers if they're strings
   const getSpanNumber = (val) => {
     if (typeof val === "number") return val;
     if (typeof val === "string") {
-      const match = val.match(/(\d+)/);
-      return match ? parseInt(match[1]) : 1;
+      const match = val.match(/(\d+\.?\d*)/);
+      return match ? parseFloat(match[1]) : 1;
     }
     return 1;
   };
 
   const colSpanNum = getSpanNumber(colSpan);
   const rowSpanNum = getSpanNumber(rowSpan);
+  
+  // Determine if card is in compact mode (small height)
+  const isCompact = rowSpanNum < 1;
   const cardRef = useRef(null);
 
   const handleResizeStart = (e) => {
@@ -47,9 +52,9 @@ const BentoCard = ({
     const currentCS = colSpanNum;
     const currentRS = rowSpanNum;
 
-    // Estimate grid unit size
+    // Estimate grid unit size - use half unit for row to allow 0.5 increments
     const unitWidth = startWidth / currentCS;
-    const unitHeight = startHeight / currentRS;
+    const baseRowHeight = 250; // Base height for 1 row span
 
     const handleMouseMove = (moveEvent) => {
       // Optional: Live preview logic could go here
@@ -62,13 +67,15 @@ const BentoCard = ({
       const newWidth = startWidth + deltaX;
       const newHeight = startHeight + deltaY;
 
-      // Calculate new spans with thresholds (e.g., must drag at least half a unit)
-      // Using Math.round handles the "closest unit" logic
+      // Calculate new spans with thresholds
       const newColSpan = Math.max(
         1,
         Math.min(4, Math.round(newWidth / unitWidth))
       );
-      const newRowSpan = Math.max(1, Math.round(newHeight / unitHeight));
+      
+      // Allow half-row increments (0.5, 1, 1.5, 2, etc.) for more flexible heights
+      const rawRowSpan = newHeight / baseRowHeight;
+      const newRowSpan = Math.max(0.5, Math.round(rawRowSpan * 2) / 2);
 
       if (newColSpan !== currentCS || newRowSpan !== currentRS) {
         onResize && onResize(newColSpan, newRowSpan);
@@ -103,14 +110,13 @@ const BentoCard = ({
         active:scale-[0.98] active:translate-y-0
         shadow-[0_0_0_1px_inset_var(--card-border)]
         hover:shadow-[0_20px_40px_-10px_var(--glow-color)]
-        flex flex-col
+        flex flex-col h-full
+        ${isDragging ? "ring-2 ring-nexus-purple shadow-2xl" : ""}
         ${className}
       `}
       style={{
         "--glow-color": glowColor,
         background: `linear-gradient(to bottom, color-mix(in srgb, ${glowColor}, black 40%), transparent 80%)`,
-        gridColumn: `span ${colSpanNum}`,
-        gridRow: `span ${rowSpanNum}`,
       }}
       {...props}
     >
@@ -119,6 +125,18 @@ const BentoCard = ({
         className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
         style={{ background: glowColor }}
       />
+
+      {/* Drag Handle - Only visible in customization mode */}
+      {isCustomizing && dragHandleProps && (
+        <div
+          {...dragHandleProps}
+          className="absolute top-2 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 bg-black/50 hover:bg-white/20 rounded-full text-white/50 hover:text-white cursor-grab active:cursor-grabbing backdrop-blur-md transition-all border border-white/10 flex items-center gap-1"
+          title="Drag to reorder"
+        >
+          <GripVertical size={14} />
+          <span className="text-xs font-medium">Drag</span>
+        </div>
+      )}
 
       {/* Customization Overlay */}
       {isCustomizing && (
@@ -152,8 +170,8 @@ const BentoCard = ({
 
       {/* Header */}
       {(title || icon) && (
-        <div className="flex items-center gap-3 p-5 pb-2 z-10">
-          {icon && <div className="text-nexus-teal">{icon}</div>}
+        <div className={`flex items-center gap-3 ${isCompact ? "p-3 pb-1" : "p-5 pb-2"} z-10`}>
+          {icon && <div className={`text-nexus-teal ${isCompact ? "scale-75" : ""}`}>{icon}</div>}
           {title && (
             <h3
               onClick={(e) => {
@@ -162,7 +180,7 @@ const BentoCard = ({
                   onTripleClick();
                 }
               }}
-              className={`text-lg font-semibold tracking-wide text-text-primary font-sans ${
+              className={`${isCompact ? "text-sm" : "text-lg"} font-semibold tracking-wide text-text-primary font-sans ${
                 onTripleClick
                   ? "cursor-pointer hover:scale-[1.02] transition-transform"
                   : ""
@@ -174,8 +192,15 @@ const BentoCard = ({
         </div>
       )}
 
-      {/* Content */}
-      <div className="flex-1 p-5 z-10 overflow-hidden relative">{children}</div>
+      {/* Content - Responsive to card size */}
+      <div className={`flex-1 ${isCompact ? "p-3" : "p-5"} z-10 overflow-hidden overflow-y-auto relative`}>
+        {React.Children.map(children, child => {
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child, { isCompact });
+          }
+          return child;
+        })}
+      </div>
 
       {/* Interactive Shine  */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-linear-to-tr from-transparent via-white/5 to-transparent" />
@@ -185,6 +210,7 @@ const BentoCard = ({
         <div
           className="absolute bottom-2 right-2 z-50 p-1.5 bg-black/50 rounded-full hover:bg-white/20 text-white/50 hover:text-white cursor-se-resize backdrop-blur-md transition-colors"
           onMouseDown={handleResizeStart}
+          title="Drag to resize"
         >
           <Maximize2 size={14} />
         </div>

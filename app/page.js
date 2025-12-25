@@ -4,6 +4,23 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Calendar,
   CheckSquare,
   BrainCircuit,
@@ -28,6 +45,42 @@ import AIChat from "../components/AIChat";
 import Notes from "../components/Notes";
 import Vault from "../components/Vault";
 import SystemMonitor from "../components/SystemMonitor";
+
+// Sortable Item Wrapper Component
+const SortableItem = ({ id, children, isCustomizing, colSpan = 1, rowSpan = 1 }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: !isCustomizing });
+
+  // Calculate height based on rowSpan (base height ~250px per row)
+  const baseRowHeight = 250;
+  const calculatedHeight = rowSpan * baseRowHeight;
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || "transform 250ms cubic-bezier(0.25, 1, 0.5, 1)",
+    zIndex: isDragging ? 50 : "auto",
+    opacity: isDragging ? 0.9 : 1,
+    gridColumn: `span ${colSpan}`,
+    // Use minHeight instead of grid-row for flexible heights
+    minHeight: `${calculatedHeight}px`,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {React.cloneElement(children, {
+        dragHandleProps: isCustomizing ? { ...attributes, ...listeners } : null,
+        isDragging,
+        rowSpan, // Pass rowSpan to child for responsive styling
+      })}
+    </div>
+  );
+};
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -111,6 +164,44 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem("nexus_layout", JSON.stringify(layout));
   }, [layout]);
+
+  // Widget Order State for Drag & Drop
+  const [widgetOrder, setWidgetOrder] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nexus_widget_order");
+      if (saved) return JSON.parse(saved);
+    }
+    return ["monitor", "ai", "tasks", "vault", "agenda", "notes"];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("nexus_widget_order", JSON.stringify(widgetOrder));
+  }, [widgetOrder]);
+
+  // DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Drag End Handler
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setWidgetOrder((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const hexToRgba = (hex, alpha = 0.3) => {
     let c;
@@ -756,165 +847,274 @@ const App = () => {
                 initial="hidden"
                 animate="show"
                 exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
-                className="grid grid-cols-1 md:grid-cols-4 gap-6"
               >
-                {/* 0. System Monitor (Full Width, Short) */}
-                <BentoCard
-                  variants={itemVariants}
-                  colSpan={layout.monitor.col}
-                  rowSpan={layout.monitor.row}
-                  className="min-h-[160px]"
-                  glowColor={hexToRgba(cardColors.monitor, 0.2)}
-                  isCustomizing={customizationMode}
-                  pickerColor={cardColors.monitor}
-                  onColorChange={(c) => handleColorChange("monitor", c)}
-                  onResize={(c, r) => handleResize("monitor", "static", c, r)}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  <SystemMonitor tasks={tasks} />
-                </BentoCard>
-
-                {/* 1. AI Core (Wide, Short) */}
-                <BentoCard
-                  variants={itemVariants}
-                  colSpan={layout.ai.col}
-                  rowSpan={layout.ai.row}
-                  title="A.C.E"
-                  onTripleClick={() => setActiveTab("ai")}
-                  icon={
-                    <div className="relative w-8 h-8">
-                      <Image
-                        src="/assets/ai-mascot.png"
-                        alt="A.C.E Mascot"
-                        fill
-                        className="object-contain"
-                      />
-                    </div>
-                  }
-                  glowColor={hexToRgba(cardColors.ai, 0.4)}
-                  isCustomizing={customizationMode}
-                  pickerColor={cardColors.ai}
-                  onColorChange={(c) => handleColorChange("ai", c)}
-                  onResize={(c, r) => handleResize("ai", "static", c, r)}
-                  className="min-h-[500px]"
-                >
-                  <AIChat />
-                </BentoCard>
-
-                {/* 2. Tasks (Standard) */}
-                <BentoCard
-                  variants={itemVariants}
-                  colSpan={layout.tasks.col}
-                  rowSpan={layout.tasks.row}
-                  title="Missions"
-                  onTripleClick={() => setActiveTab("tasks")}
-                  icon={<CheckSquare />}
-                  glowColor={hexToRgba(cardColors.tasks, 0.2)}
-                  isCustomizing={customizationMode}
-                  pickerColor={cardColors.tasks}
-                  onColorChange={(c) => handleColorChange("tasks", c)}
-                  onResize={(c, r) => handleResize("tasks", "static", c, r)}
-                  className="min-h-[500px]"
-                >
-                  <Tasks
-                    tasks={tasks}
-                    setTasks={setTasks}
-                    compact={true}
-                    searchQuery={searchQuery}
-                  />
-                </BentoCard>
-
-                {/* 3. Quick Vault (Standard) */}
-                <BentoCard
-                  variants={itemVariants}
-                  colSpan={layout.vault.col}
-                  rowSpan={layout.vault.row}
-                  title="Data Vault"
-                  onTripleClick={() => setActiveTab("vault")}
-                  icon={<Database />}
-                  glowColor={hexToRgba(cardColors.vault, 0.5)}
-                  isCustomizing={customizationMode}
-                  pickerColor={cardColors.vault}
-                  onColorChange={(c) => handleColorChange("vault", c)}
-                  onResize={(c, r) => handleResize("vault", "static", c, r)}
-                  className="min-h-[500px]"
-                >
-                  <Vault
-                    searchQuery={searchQuery}
-                    items={vaultItems}
-                    setItems={setVaultItems}
-                  />
-                </BentoCard>
-
-                {/* 4. Agenda (Tall) */}
-                <BentoCard
-                  variants={itemVariants}
-                  colSpan={layout.agenda.col}
-                  rowSpan={layout.agenda.row}
-                  title="Timeline"
-                  onTripleClick={() => setActiveTab("calendar")}
-                  icon={<Calendar />}
-                  glowColor={hexToRgba(cardColors.agenda, 0.3)}
-                  isCustomizing={customizationMode}
-                  pickerColor={cardColors.agenda}
-                  onColorChange={(c) => handleColorChange("agenda", c)}
-                  onResize={(c, r) => handleResize("agenda", "static", c, r)}
-                  className="min-h-[500px]"
-                >
-                  <Agenda
-                    searchQuery={searchQuery}
-                    events={events}
-                    setEvents={setEvents}
-                  />
-                </BentoCard>
-
-                {/* 5. Notes (Wide, Tall) */}
-                <BentoCard
-                  variants={itemVariants}
-                  colSpan={layout.notes.col}
-                  rowSpan={layout.notes.row}
-                  title="Neural Notes"
-                  onTripleClick={() => setActiveTab("notes")}
-                  icon={<LayoutGrid />}
-                  glowColor={hexToRgba(cardColors.notes, 0.1)}
-                  isCustomizing={customizationMode}
-                  pickerColor={cardColors.notes}
-                  onColorChange={(c) => handleColorChange("notes", c)}
-                  onResize={(c, r) => handleResize("notes", "static", c, r)}
-                  className="h-[500px]"
-                >
-                  <Notes
-                    searchQuery={searchQuery}
-                    content={noteContent}
-                    setContent={setNoteContent}
-                  />
-                </BentoCard>
-
-                {/* Custom Cards */}
-                {customCards.map((card) => (
-                  <BentoCard
-                    key={card.id}
-                    variants={itemVariants}
-                    colSpan={card.colSpan}
-                    rowSpan={card.rowSpan}
-                    title={card.title}
-                    glowColor={hexToRgba(card.color, 0.3)}
-                    isCustomizing={customizationMode}
-                    pickerColor={card.color}
-                    onColorChange={(c) => handleUpdateCardColor(card.id, c)}
-                    onDelete={() => handleDeleteCard(card.id)}
-                    onResize={(c, r) => handleResize(card.id, "custom", c, r)}
-                    className="min-h-[200px]"
+                  <SortableContext
+                    items={[...widgetOrder, ...customCards.map((c) => c.id)]}
+                    strategy={rectSortingStrategy}
                   >
-                    <textarea
-                      className="w-full h-full bg-transparent border-none resize-none focus:outline-none text-text-secondary text-sm p-2"
-                      placeholder="Type something..."
-                      value={card.content}
-                      onChange={(e) =>
-                        handleUpdateCardContent(card.id, e.target.value)
-                      }
-                    />
-                  </BentoCard>
-                ))}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      {widgetOrder.map((widgetId) => {
+                        // Render widgets based on their ID
+                        switch (widgetId) {
+                          case "monitor":
+                            return (
+                              <SortableItem
+                                key="monitor"
+                                id="monitor"
+                                isCustomizing={customizationMode}
+                                colSpan={layout.monitor.col}
+                                rowSpan={layout.monitor.row}
+                              >
+                                <BentoCard
+                                  variants={itemVariants}
+                                  colSpan={layout.monitor.col}
+                                  rowSpan={layout.monitor.row}
+                                  className="min-h-[160px]"
+                                  glowColor={hexToRgba(cardColors.monitor, 0.2)}
+                                  isCustomizing={customizationMode}
+                                  pickerColor={cardColors.monitor}
+                                  onColorChange={(c) =>
+                                    handleColorChange("monitor", c)
+                                  }
+                                  onResize={(c, r) =>
+                                    handleResize("monitor", "static", c, r)
+                                  }
+                                >
+                                  <SystemMonitor tasks={tasks} />
+                                </BentoCard>
+                              </SortableItem>
+                            );
+                          case "ai":
+                            return (
+                              <SortableItem
+                                key="ai"
+                                id="ai"
+                                isCustomizing={customizationMode}
+                                colSpan={layout.ai.col}
+                                rowSpan={layout.ai.row}
+                              >
+                                <BentoCard
+                                  variants={itemVariants}
+                                  colSpan={layout.ai.col}
+                                  rowSpan={layout.ai.row}
+                                  title="A.C.E"
+                                  onTripleClick={() => setActiveTab("ai")}
+                                  icon={
+                                    <div className="relative w-8 h-8">
+                                      <Image
+                                        src="/assets/ai-mascot.png"
+                                        alt="A.C.E Mascot"
+                                        fill
+                                        className="object-contain"
+                                      />
+                                    </div>
+                                  }
+                                  glowColor={hexToRgba(cardColors.ai, 0.4)}
+                                  isCustomizing={customizationMode}
+                                  pickerColor={cardColors.ai}
+                                  onColorChange={(c) =>
+                                    handleColorChange("ai", c)
+                                  }
+                                  onResize={(c, r) =>
+                                    handleResize("ai", "static", c, r)
+                                  }
+                                  className="min-h-[500px]"
+                                >
+                                  <AIChat />
+                                </BentoCard>
+                              </SortableItem>
+                            );
+                          case "tasks":
+                            return (
+                              <SortableItem
+                                key="tasks"
+                                id="tasks"
+                                isCustomizing={customizationMode}
+                                colSpan={layout.tasks.col}
+                                rowSpan={layout.tasks.row}
+                              >
+                                <BentoCard
+                                  variants={itemVariants}
+                                  colSpan={layout.tasks.col}
+                                  rowSpan={layout.tasks.row}
+                                  title="Missions"
+                                  onTripleClick={() => setActiveTab("tasks")}
+                                  icon={<CheckSquare />}
+                                  glowColor={hexToRgba(cardColors.tasks, 0.2)}
+                                  isCustomizing={customizationMode}
+                                  pickerColor={cardColors.tasks}
+                                  onColorChange={(c) =>
+                                    handleColorChange("tasks", c)
+                                  }
+                                  onResize={(c, r) =>
+                                    handleResize("tasks", "static", c, r)
+                                  }
+                                  className="min-h-[500px]"
+                                >
+                                  <Tasks
+                                    tasks={tasks}
+                                    setTasks={setTasks}
+                                    compact={true}
+                                    searchQuery={searchQuery}
+                                  />
+                                </BentoCard>
+                              </SortableItem>
+                            );
+                          case "vault":
+                            return (
+                              <SortableItem
+                                key="vault"
+                                id="vault"
+                                isCustomizing={customizationMode}
+                                colSpan={layout.vault.col}
+                                rowSpan={layout.vault.row}
+                              >
+                                <BentoCard
+                                  variants={itemVariants}
+                                  colSpan={layout.vault.col}
+                                  rowSpan={layout.vault.row}
+                                  title="Data Vault"
+                                  onTripleClick={() => setActiveTab("vault")}
+                                  icon={<Database />}
+                                  glowColor={hexToRgba(cardColors.vault, 0.5)}
+                                  isCustomizing={customizationMode}
+                                  pickerColor={cardColors.vault}
+                                  onColorChange={(c) =>
+                                    handleColorChange("vault", c)
+                                  }
+                                  onResize={(c, r) =>
+                                    handleResize("vault", "static", c, r)
+                                  }
+                                  className="min-h-[500px]"
+                                >
+                                  <Vault
+                                    searchQuery={searchQuery}
+                                    items={vaultItems}
+                                    setItems={setVaultItems}
+                                  />
+                                </BentoCard>
+                              </SortableItem>
+                            );
+                          case "agenda":
+                            return (
+                              <SortableItem
+                                key="agenda"
+                                id="agenda"
+                                isCustomizing={customizationMode}
+                                colSpan={layout.agenda.col}
+                                rowSpan={layout.agenda.row}
+                              >
+                                <BentoCard
+                                  variants={itemVariants}
+                                  colSpan={layout.agenda.col}
+                                  rowSpan={layout.agenda.row}
+                                  title="Timeline"
+                                  onTripleClick={() => setActiveTab("calendar")}
+                                  icon={<Calendar />}
+                                  glowColor={hexToRgba(cardColors.agenda, 0.3)}
+                                  isCustomizing={customizationMode}
+                                  pickerColor={cardColors.agenda}
+                                  onColorChange={(c) =>
+                                    handleColorChange("agenda", c)
+                                  }
+                                  onResize={(c, r) =>
+                                    handleResize("agenda", "static", c, r)
+                                  }
+                                  className="min-h-[500px]"
+                                >
+                                  <Agenda
+                                    searchQuery={searchQuery}
+                                    events={events}
+                                    setEvents={setEvents}
+                                  />
+                                </BentoCard>
+                              </SortableItem>
+                            );
+                          case "notes":
+                            return (
+                              <SortableItem
+                                key="notes"
+                                id="notes"
+                                isCustomizing={customizationMode}
+                                colSpan={layout.notes.col}
+                                rowSpan={layout.notes.row}
+                              >
+                                <BentoCard
+                                  variants={itemVariants}
+                                  colSpan={layout.notes.col}
+                                  rowSpan={layout.notes.row}
+                                  title="Neural Notes"
+                                  onTripleClick={() => setActiveTab("notes")}
+                                  icon={<LayoutGrid />}
+                                  glowColor={hexToRgba(cardColors.notes, 0.1)}
+                                  isCustomizing={customizationMode}
+                                  pickerColor={cardColors.notes}
+                                  onColorChange={(c) =>
+                                    handleColorChange("notes", c)
+                                  }
+                                  onResize={(c, r) =>
+                                    handleResize("notes", "static", c, r)
+                                  }
+                                  className="h-[500px]"
+                                >
+                                  <Notes
+                                    searchQuery={searchQuery}
+                                    content={noteContent}
+                                    setContent={setNoteContent}
+                                  />
+                                </BentoCard>
+                              </SortableItem>
+                            );
+                          default:
+                            return null;
+                        }
+                      })}
+
+                      {/* Custom Cards */}
+                      {customCards.map((card) => (
+                        <SortableItem
+                          key={card.id}
+                          id={card.id}
+                          isCustomizing={customizationMode}
+                          colSpan={card.colSpan}
+                          rowSpan={card.rowSpan}
+                        >
+                          <BentoCard
+                            variants={itemVariants}
+                            colSpan={card.colSpan}
+                            rowSpan={card.rowSpan}
+                            title={card.title}
+                            glowColor={hexToRgba(card.color, 0.3)}
+                            isCustomizing={customizationMode}
+                            pickerColor={card.color}
+                            onColorChange={(c) =>
+                              handleUpdateCardColor(card.id, c)
+                            }
+                            onDelete={() => handleDeleteCard(card.id)}
+                            onResize={(c, r) =>
+                              handleResize(card.id, "custom", c, r)
+                            }
+                            className="min-h-[200px]"
+                          >
+                            <textarea
+                              className="w-full h-full bg-transparent border-none resize-none focus:outline-none text-text-secondary text-sm p-2"
+                              placeholder="Type something..."
+                              value={card.content}
+                              onChange={(e) =>
+                                handleUpdateCardContent(card.id, e.target.value)
+                              }
+                            />
+                          </BentoCard>
+                        </SortableItem>
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </motion.div>
             )}
 
