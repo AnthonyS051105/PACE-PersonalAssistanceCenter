@@ -114,3 +114,76 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--nexus-purple);
 }
+
+/* ReactQuill Custom Styling - Remove borders */
+.ql-container.ql-snow {
+  border: none !important;
+  background: transparent !important;
+}
+
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  background: transparent !important;
+}
+
+.ql-editor {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.ql-editor:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove focus ring from Quill container */
+.quill {
+  border: none !important;
+  outline: none !important;
+}
+
+.quill:focus,
+.quill:focus-within {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove all focus rings and outlines from Quill */
+.quill *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.ql-snow.ql-toolbar button:focus,
+.ql-snow .ql-toolbar button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ReactQuill text colors */
+.ql-snow .ql-stroke {
+  stroke: var(--text-secondary) !important;
+}
+
+.ql-snow .ql-fill {
+  fill: var(--text-secondary) !important;
+}
+
+.ql-snow .ql-picker {
+  color: var(--text-secondary) !important;
+}
+
+.ql-snow .ql-picker-options {
+  background-color: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+}
+
+.ql-editor.ql-blank::before {
+  color: var(--text-secondary) !important;
+  opacity: 0.5;
+}

@@ -63,9 +63,10 @@ const SortableItem = ({
     isDragging,
   } = useSortable({ id, disabled: !isCustomizing });
 
-  // Calculate height based on rowSpan (base height ~250px per row)
-  const baseRowHeight = 250;
-  const calculatedHeight = rowSpan * baseRowHeight;
+  // Calculate height based on rowSpan (base unit ~125px, so 1 row = 2 units = 250px)
+  // This allows for half-height cards (rowSpan 0.5 = 125px)
+  const baseUnitHeight = 125;
+  const calculatedHeight = rowSpan * 2 * baseUnitHeight;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -73,8 +74,7 @@ const SortableItem = ({
     zIndex: isDragging ? 50 : "auto",
     opacity: isDragging ? 0.9 : 1,
     gridColumn: `span ${colSpan}`,
-    // Use minHeight instead of grid-row for flexible heights
-    minHeight: `${calculatedHeight}px`,
+    height: `${calculatedHeight}px`,
   };
 
   return (
@@ -158,12 +158,12 @@ const App = () => {
       if (saved) return JSON.parse(saved);
     }
     return {
-      monitor: { col: 4, row: 1 },
-      ai: { col: 2, row: 1 },
-      tasks: { col: 1, row: 1 },
-      vault: { col: 1, row: 1 },
-      agenda: { col: 1, row: 1 },
-      notes: { col: 3, row: 1 },
+      monitor: { col: 4, row: 0.65 },
+      ai: { col: 2, row: 2 },
+      tasks: { col: 1, row: 2 },
+      vault: { col: 1, row: 2 },
+      agenda: { col: 1, row: 2 },
+      notes: { col: 3, row: 2 },
     };
   });
 

@@ -33,8 +33,12 @@ const BentoCard = ({
   const colSpanNum = getSpanNumber(colSpan);
   const rowSpanNum = getSpanNumber(rowSpan);
 
-  // Determine if card is in compact mode (small height)
+  // Determine card size mode based on rowSpan
+  // compact: rowSpan < 1 (half height or less)
+  // normal: rowSpan >= 1 and < 1.5
+  // tall: rowSpan >= 1.5
   const isCompact = rowSpanNum < 1;
+  const isTall = rowSpanNum >= 1.5;
   const cardRef = useRef(null);
 
   const handleResizeStart = (e) => {
@@ -46,18 +50,19 @@ const BentoCard = ({
 
     const startX = e.clientX;
     const startY = e.clientY;
-    const startWidth = card.offsetWidth;
     const startHeight = card.offsetHeight;
+    const startWidth = card.offsetWidth;
 
     const currentCS = colSpanNum;
     const currentRS = rowSpanNum;
 
-    // Estimate grid unit size - use half unit for row to allow 0.5 increments
+    // Estimate grid unit size
     const unitWidth = startWidth / currentCS;
-    const baseRowHeight = 250; // Base height for 1 row span
+    // Base height unit: 250px = 1 row, 125px = 0.5 row
+    const baseRowHeight = 250;
 
     const handleMouseMove = (moveEvent) => {
-      // Optional: Live preview logic could go here
+      // Optional: Could add live preview here
     };
 
     const handleMouseUp = (upEvent) => {
@@ -67,13 +72,14 @@ const BentoCard = ({
       const newWidth = startWidth + deltaX;
       const newHeight = startHeight + deltaY;
 
-      // Calculate new spans with thresholds
+      // Calculate new col span (1-4)
       const newColSpan = Math.max(
         1,
         Math.min(4, Math.round(newWidth / unitWidth))
       );
 
-      // Allow half-row increments (0.5, 1, 1.5, 2, etc.) for more flexible heights
+      // Calculate new row span with 0.5 increments
+      // Allow values: 0.5, 1, 1.5, 2, 2.5, 3, etc.
       const rawRowSpan = newHeight / baseRowHeight;
       const newRowSpan = Math.max(0.5, Math.round(rawRowSpan * 2) / 2);
 
@@ -205,12 +211,16 @@ const BentoCard = ({
       {/* Content - Responsive to card size */}
       <div
         className={`flex-1 ${
-          isCompact ? "p-3" : "p-5"
+          isCompact ? "p-3 pt-1" : "p-5 pt-2"
         } z-10 overflow-hidden overflow-y-auto relative`}
       >
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
-            return React.cloneElement(child, { isCompact });
+            return React.cloneElement(child, {
+              isCompact,
+              isTall,
+              rowSpan: rowSpanNum,
+            });
           }
           return child;
         })}

@@ -256,7 +256,7 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
         </div>
       </div>
 
-      <div className="flex-1 bg-black/10 rounded-xl overflow-hidden flex flex-col">
+      <div className="flex-1 bg-black/10 rounded-xl overflow-hidden flex flex-col [&_*]:outline-none [&_*]:ring-0">
         <ReactQuill
           theme="snow"
           value={content}
@@ -268,7 +268,7 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
               [{ list: "ordered" }, { list: "bullet" }],
             ],
           }}
-          className="h-full flex flex-col"
+          className="h-full flex flex-col border-none outline-none"
         />
       </div>
 
