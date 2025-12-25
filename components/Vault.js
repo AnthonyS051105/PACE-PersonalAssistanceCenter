@@ -167,6 +167,28 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
     url: "",
     category: "other",
   });
+  const [urlError, setUrlError] = useState("");
+
+  // URL validation function
+  const isValidUrl = (string) => {
+    try {
+      const url = new URL(string);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const handleUrlChange = (e) => {
+    const url = e.target.value;
+    setNewLink({ ...newLink, url });
+
+    if (url && !isValidUrl(url)) {
+      setUrlError("Please enter a valid URL (e.g., https://example.com)");
+    } else {
+      setUrlError("");
+    }
+  };
 
   // Default categories list
   const defaultCategories = [
@@ -231,6 +253,11 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
   const handleAdd = () => {
     if (!newLink.title || !newLink.url) return;
 
+    if (!isValidUrl(newLink.url)) {
+      setUrlError("Please enter a valid URL (e.g., https://example.com)");
+      return;
+    }
+
     const item = {
       id: Date.now().toString(),
       ...newLink,
@@ -238,6 +265,7 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
 
     setItems([...items, item]);
     setNewLink({ title: "", url: "", category: "other" });
+    setUrlError("");
     setViewMode("list");
   };
 
@@ -344,13 +372,22 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
             className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none focus:border-nexus-purple transition-colors"
           />
 
-          <input
-            type="text"
-            placeholder="URL (https://...)"
-            value={newLink.url}
-            onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
-            className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none focus:border-nexus-purple transition-colors"
-          />
+          <div className="flex flex-col gap-1">
+            <input
+              type="text"
+              placeholder="URL (https://...)"
+              value={newLink.url}
+              onChange={handleUrlChange}
+              className={`bg-input-bg border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none transition-colors ${
+                urlError
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-card-border focus:border-nexus-purple"
+              }`}
+            />
+            {urlError && (
+              <span className="text-red-500 text-[10px]">{urlError}</span>
+            )}
+          </div>
 
           <div className="grid grid-cols-4 gap-2">
             {categories.map((cat) => (
@@ -375,7 +412,7 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
 
           <button
             onClick={handleAdd}
-            disabled={!newLink.title || !newLink.url}
+            disabled={!newLink.title || !newLink.url || urlError}
             className="mt-auto bg-nexus-teal text-nexus-deep py-2 rounded-lg text-xs font-bold hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Save Resource
