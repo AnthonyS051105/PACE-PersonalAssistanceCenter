@@ -33,6 +33,7 @@ const App = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef(null);
+  const settingsRef = useRef(null);
 
   // Theme & Customization State
   const [showSettings, setShowSettings] = useState(false);
@@ -208,11 +209,36 @@ const App = () => {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
+      // Escape to exit customization mode or close settings
+      if (e.key === "Escape") {
+        if (customizationMode) {
+          setCustomizationMode(false);
+        }
+        if (showSettings) {
+          setShowSettings(false);
+        }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [customizationMode, showSettings]);
+
+  // Click outside handler for settings panel
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        showSettings &&
+        settingsRef.current &&
+        !settingsRef.current.contains(e.target)
+      ) {
+        setShowSettings(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSettings]);
 
   const [tasks, setTasks] = useState([
     {
@@ -558,7 +584,7 @@ const App = () => {
               })()}
             </div>
 
-            <div className="relative">
+            <div className="relative" ref={settingsRef}>
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className={`p-2 rounded-full transition-all ${
@@ -1134,6 +1160,26 @@ const App = () => {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Exit Button for Customization Mode */}
+      <AnimatePresence>
+        {customizationMode && (
+          <motion.button
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            onClick={() => setCustomizationMode(false)}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 bg-nexus-purple hover:bg-nexus-purple/90 text-white font-bold rounded-xl shadow-lg shadow-nexus-purple/30 transition-all hover:scale-105"
+            title="Press Escape to exit"
+          >
+            <Check size={18} />
+            <span>Done Editing</span>
+            <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded">
+              ESC
+            </span>
+          </motion.button>
         )}
       </AnimatePresence>
     </div>
