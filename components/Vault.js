@@ -633,32 +633,54 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
           )}
 
           <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
-            {filteredLinks.map((item) => (
-              <a
-                key={item.id}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative flex flex-col p-3 rounded-xl bg-input-bg border border-card-border hover:border-nexus-teal/50 transition-all hover:-translate-y-1"
-              >
-                <button
-                  onClick={(e) => handleDelete(e, item.id)}
-                  className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
-                >
-                  <Trash2 size={12} />
-                </button>
+            {filteredLinks.map((item) => {
+              // Extract domain for favicon
+              let faviconUrl = null;
+              try {
+                const url = new URL(item.url);
+                faviconUrl = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=32`;
+              } catch (_) {
+                // Invalid URL, favicon will be null
+              }
 
-                <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 bg-card-bg rounded-lg group-hover:bg-nexus-teal/20 transition-colors">
-                    {getCategoryIcon(getCategoryName(item.category))}
+              return (
+                <a
+                  key={item.id}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative flex flex-col p-3 rounded-xl bg-input-bg border border-card-border hover:border-nexus-teal/50 transition-all hover:-translate-y-1"
+                >
+                  <button
+                    onClick={(e) => handleDelete(e, item.id)}
+                    className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-card-bg rounded-lg group-hover:bg-nexus-teal/20 transition-colors">
+                      {getCategoryIcon(getCategoryName(item.category))}
+                    </div>
+                    {faviconUrl ? (
+                      <img
+                        src={faviconUrl}
+                        alt=""
+                        className="w-4 h-4 rounded-sm"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full bg-card-border group-hover:bg-nexus-teal transition-colors" />
+                    )}
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-card-border group-hover:bg-nexus-teal transition-colors" />
-                </div>
-                <span className="text-xs font-medium text-text-secondary group-hover:text-text-primary truncate">
-                  {item.title}
-                </span>
-              </a>
-            ))}
+                  <span className="text-xs font-medium text-text-secondary group-hover:text-text-primary truncate">
+                    {item.title}
+                  </span>
+                </a>
+              );
+            })}
 
             {/* Add New Button */}
             <button
