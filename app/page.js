@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/components/AuthContext";
 import {
   DndContext,
   closestCenter,
@@ -37,6 +39,7 @@ import {
   Link as LinkIcon,
   ArrowLeft,
   Plus,
+  LogOut,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
@@ -89,6 +92,8 @@ const SortableItem = ({
 };
 
 const App = () => {
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef(null);
@@ -836,9 +841,23 @@ const App = () => {
               </AnimatePresence>
             </div>
 
-            {/* User Avatar */}
-            <div className="w-10 h-10 rounded-full bg-linear-to-tr from-nexus-purple to-nexus-teal flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform">
-              <span className="font-bold text-white">U</span>
+            {/* User Avatar with Logout */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={async () => {
+                  await logout();
+                  window.location.href = '/auth';
+                }}
+                className="p-2 rounded-full bg-nexus-glass border border-nexus-glassBorder text-gray-400 hover:text-red-400 hover:border-red-400/50 hover:bg-red-500/10 transition-all"
+                title="Sign Out"
+              >
+                <LogOut size={18} />
+              </button>
+              <div className="w-10 h-10 rounded-full bg-linear-to-tr from-nexus-purple to-nexus-teal flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform">
+                <span className="font-bold text-white">
+                  {user?.user_metadata?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                </span>
+              </div>
             </div>
           </motion.div>
         </motion.header>
