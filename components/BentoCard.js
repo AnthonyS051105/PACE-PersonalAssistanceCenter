@@ -103,7 +103,11 @@ const BentoCard = ({
         onTripleClick ? "Triple-click card or click title to expand" : undefined
       }
       onClick={(e) => {
-        if (e.detail === 3 && onTripleClick) {
+        const targetTag = e.target.tagName.toUpperCase();
+        const isInput =
+          ["INPUT", "TEXTAREA"].includes(targetTag) || e.target.isContentEditable;
+
+        if (e.detail === 3 && onTripleClick && !isInput) {
           onTripleClick();
         }
         props.onClick && props.onClick(e);
