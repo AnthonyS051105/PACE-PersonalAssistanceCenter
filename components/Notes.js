@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import {
   Download,
@@ -17,20 +18,616 @@ import {
   Quote,
   Copy,
   Check,
+  X,
+  Link,
+  FileImage,
 } from "lucide-react";
 import { summarizeNotes } from "../lib/geminiService";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import "react-quill-new/dist/quill.snow.css";
+import "katex/dist/katex.min.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+// ================== MODAL COMPONENTS ==================
+
+// Image Insert Modal
+const ImageModal = ({ isOpen, onClose, onInsert, mode }) => {
+  const [imageUrl, setImageUrl] = useState("");
+  const [altText, setAltText] = useState("");
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [activeTab, setActiveTab] = useState("url");
+  const fileInputRef = useRef(null);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setUploadedImage(event.target.result);
+      setActiveTab("upload");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleInsert = () => {
+    const src = activeTab === "url" ? imageUrl : uploadedImage;
+    if (!src) return;
+
+    if (mode === "markdown") {
+      onInsert(`![${altText || "image"}](${src})`);
+    } else {
+      onInsert(`<img src="${src}" alt="${altText || "image"}" style="max-width: 100%; border-radius: 8px; margin: 8px 0;" />`);
+    }
+    handleClose();
+  };
+
+  const handleClose = () => {
+    setImageUrl("");
+    setAltText("");
+    setUploadedImage(null);
+    setActiveTab("url");
+    onClose();
+  };
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!isOpen || !mounted) return null;
+  const modalRoot = document.getElementById("modal-root") || document.body;
+
+  return createPortal(
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-8">
+      <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-white/20 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-nexus-purple/20 rounded-lg">
+              <ImageIcon size={18} className="text-nexus-purple" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Insert Image</h3>
+          </div>
+          <button
+            onClick={handleClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <X size={18} className="text-text-secondary" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-white/10 bg-black/40">
+          <button
+            onClick={() => setActiveTab("url")}
+            className={`flex-1 py-3 text-sm font-medium transition-all ${
+              activeTab === "url"
+                ? "text-nexus-teal border-b-2 border-nexus-teal bg-nexus-teal/20"
+                : "text-text-secondary hover:text-text-primary hover:bg-white/5"
+            }`}
+          >
+            <Link size={14} className="inline mr-2" />
+            URL
+          </button>
+          <button
+            onClick={() => setActiveTab("upload")}
+            className={`flex-1 py-3 text-sm font-medium transition-all ${
+              activeTab === "upload"
+                ? "text-nexus-teal border-b-2 border-nexus-teal bg-nexus-teal/20"
+                : "text-text-secondary hover:text-text-primary hover:bg-white/5"
+            }`}
+          >
+            <FileImage size={14} className="inline mr-2" />
+            Upload
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+          {activeTab === "url" ? (
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-2">
+                Image URL
+              </label>
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.png"
+                className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-nexus-teal/50 transition-all placeholder:text-text-secondary/50"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-2">
+                Upload Image
+              </label>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-32 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-nexus-teal/50 hover:bg-white/5 transition-all"
+              >
+                {uploadedImage ? (
+                  <img
+                    src={uploadedImage}
+                    alt="Preview"
+                    className="max-h-28 max-w-full object-contain rounded-lg"
+                  />
+                ) : (
+                  <>
+                    <Upload size={24} className="text-text-secondary mb-2" />
+                    <span className="text-xs text-text-secondary">
+                      Click to upload
+                    </span>
+                  </>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              Alt Text (optional)
+            </label>
+            <input
+              type="text"
+              value={altText}
+              onChange={(e) => setAltText(e.target.value)}
+              placeholder="Describe the image..."
+              className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-nexus-teal/50 transition-all placeholder:text-text-secondary/50"
+            />
+          </div>
+
+          {/* Preview */}
+          {(imageUrl || uploadedImage) && (
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-text-secondary mb-2">
+                Preview
+              </label>
+              <div className="bg-black/20 rounded-xl p-3 border border-white/5">
+                <img
+                  src={activeTab === "url" ? imageUrl : uploadedImage}
+                  alt={altText || "Preview"}
+                  className="max-h-40 max-w-full object-contain rounded-lg mx-auto"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4 border-t border-white/10 bg-black/20">
+          <button
+            onClick={handleClose}
+            className="flex-1 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleInsert}
+            disabled={!imageUrl && !uploadedImage}
+            className="flex-1 py-2.5 text-sm font-medium bg-gradient-to-r from-nexus-purple to-nexus-teal text-white rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Insert Image
+          </button>
+        </div>
+      </div>
+    </div>,
+    modalRoot
+  );
+};
+
+// Code Block Modal
+const CodeModal = ({ isOpen, onClose, onInsert, mode }) => {
+  const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("javascript");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const [mounted, setMounted] = useState(false);
+
+  const languages = [
+    { value: "javascript", label: "JavaScript" },
+    { value: "typescript", label: "TypeScript" },
+    { value: "python", label: "Python" },
+    { value: "java", label: "Java" },
+    { value: "cpp", label: "C++" },
+    { value: "c", label: "C" },
+    { value: "csharp", label: "C#" },
+    { value: "go", label: "Go" },
+    { value: "rust", label: "Rust" },
+    { value: "ruby", label: "Ruby" },
+    { value: "php", label: "PHP" },
+    { value: "swift", label: "Swift" },
+    { value: "kotlin", label: "Kotlin" },
+    { value: "html", label: "HTML" },
+    { value: "css", label: "CSS" },
+    { value: "sql", label: "SQL" },
+    { value: "bash", label: "Bash" },
+    { value: "json", label: "JSON" },
+    { value: "yaml", label: "YAML" },
+    { value: "markdown", label: "Markdown" },
+  ];
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isDropdownOpen]);
+
+  const handleInsert = () => {
+    if (!code.trim()) return;
+
+    if (mode === "markdown") {
+      onInsert(`\n\`\`\`${language}\n${code}\n\`\`\`\n`);
+    } else {
+      onInsert(`<pre><code class="language-${language}">${code}</code></pre>`);
+    }
+    handleClose();
+  };
+
+  const handleClose = () => {
+    setCode("");
+    setLanguage("javascript");
+    onClose();
+  };
+
+  if (!isOpen || !mounted) return null;
+  const modalRoot = document.getElementById("modal-root") || document.body;
+
+  return createPortal(
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-8">
+      <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-white/20 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-nexus-teal/20 rounded-lg">
+              <Code size={18} className="text-nexus-teal" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Insert Code Block</h3>
+          </div>
+          <button
+            onClick={handleClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <X size={18} className="text-text-secondary" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              Language
+            </label>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-text-primary text-sm flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-nexus-teal/50 transition-all"
+              >
+                <span>
+                  {languages.find((l) => l.value === language)?.label || "Select Language"}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-200 ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.value}
+                      onClick={() => {
+                        setLanguage(lang.value);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                        language === lang.value
+                          ? "bg-nexus-teal/20 text-nexus-teal font-medium"
+                          : "text-text-secondary hover:bg-white/5 hover:text-text-primary"
+                      }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              Code
+            </label>
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder={`// Enter your ${language} code here...`}
+              rows={6}
+              className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-text-primary text-sm font-mono focus:outline-none focus:ring-2 focus:ring-nexus-teal/50 transition-all resize-none placeholder:text-text-secondary/50 leading-relaxed"
+              spellCheck={false}
+            />
+          </div>
+
+          {/* Preview */}
+          {code && (
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-2">
+                Preview
+              </label>
+              <div className="bg-black/40 rounded-xl border border-white/10 overflow-hidden">
+                <div className="flex justify-between items-center px-4 py-2 bg-white/5 border-b border-white/5">
+                  <span className="text-xs text-text-secondary font-mono">
+                    {language}
+                  </span>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <pre className="font-mono text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    <SyntaxHighlight code={code} />
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4 border-t border-white/10 bg-black/20">
+          <button
+            onClick={handleClose}
+            className="flex-1 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleInsert}
+            disabled={!code.trim()}
+            className="flex-1 py-2.5 text-sm font-medium bg-gradient-to-r from-nexus-teal to-emerald-500 text-nexus-deep font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Insert Code
+          </button>
+        </div>
+      </div>
+    </div>,
+    modalRoot
+  );
+};
+
+// Math/LaTeX Modal with KaTeX
+const MathModal = ({ isOpen, onClose, onInsert, mode }) => {
+  const [latex, setLatex] = useState("");
+  const [isBlock, setIsBlock] = useState(true);
+  const [renderedMath, setRenderedMath] = useState("");
+  const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const exampleEquations = [
+    { label: "Quadratic Formula", latex: "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}" },
+    { label: "Euler's Identity", latex: "e^{i\\pi} + 1 = 0" },
+    { label: "Pythagorean Theorem", latex: "a^2 + b^2 = c^2" },
+    { label: "Sum Notation", latex: "\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}" },
+    { label: "Integral", latex: "\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}" },
+    { label: "Matrix", latex: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" },
+  ];
+
+  useEffect(() => {
+    if (!latex.trim()) {
+      setRenderedMath("");
+      setError("");
+      return;
+    }
+
+    const renderMath = async () => {
+      try {
+        const katex = (await import("katex")).default;
+        const html = katex.renderToString(latex, {
+          throwOnError: true,
+          displayMode: isBlock,
+        });
+        setRenderedMath(html);
+        setError("");
+      } catch (err) {
+        setError(err.message);
+        setRenderedMath("");
+      }
+    };
+
+    renderMath();
+  }, [latex, isBlock]);
+
+  const handleInsert = () => {
+    if (!latex.trim() || error) return;
+
+    if (mode === "markdown") {
+      if (isBlock) {
+        onInsert(`\n$$\n${latex}\n$$\n`);
+      } else {
+        onInsert(`$${latex}$`);
+      }
+    } else {
+      // For HTML mode, insert rendered KaTeX
+      onInsert(`<span class="katex-equation" data-latex="${latex}">${renderedMath}</span>`);
+    }
+    handleClose();
+  };
+
+  const handleClose = () => {
+    setLatex("");
+    setIsBlock(true);
+    setRenderedMath("");
+    setError("");
+    onClose();
+  };
+
+  if (!isOpen || !mounted) return null;
+  const modalRoot = document.getElementById("modal-root") || document.body;
+
+  return createPortal(
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-8">
+      <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] border border-white/20 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 rounded-lg">
+              <span className="text-amber-400 font-serif text-lg font-bold">∑</span>
+            </div>
+            <h3 className="text-lg font-bold text-white">Insert Math Equation</h3>
+          </div>
+          <button
+            onClick={handleClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <X size={18} className="text-text-secondary" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+          {/* Display Mode Toggle */}
+          <div className="flex items-center gap-4">
+            <label className="text-xs font-medium text-text-secondary">Display Mode:</label>
+            <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 border border-white/5">
+              <button
+                onClick={() => setIsBlock(true)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  isBlock
+                    ? "bg-amber-500/30 text-amber-400"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Block
+              </button>
+              <button
+                onClick={() => setIsBlock(false)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  !isBlock
+                    ? "bg-amber-500/30 text-amber-400"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Inline
+              </button>
+            </div>
+          </div>
+
+          {/* LaTeX Input */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              LaTeX Expression
+            </label>
+            <textarea
+              value={latex}
+              onChange={(e) => setLatex(e.target.value)}
+              placeholder="Enter LaTeX: e.g., \frac{a}{b}, \sqrt{x}, \sum_{i=1}^{n} i"
+              rows={2}
+              className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-text-primary text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all resize-none placeholder:text-text-secondary/50 leading-relaxed"
+              spellCheck={false}
+            />
+          </div>
+
+          {/* Example Equations */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              Quick Examples
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {exampleEquations.map((eq) => (
+                <button
+                  key={eq.label}
+                  onClick={() => setLatex(eq.latex)}
+                  className="px-3 py-1.5 text-xs font-medium bg-black/30 border border-white/10 rounded-lg text-text-secondary hover:text-amber-400 hover:border-amber-500/30 transition-all"
+                >
+                  {eq.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              Live Preview
+            </label>
+            <div className="bg-black/30 rounded-xl border border-white/10 p-4 min-h-[60px] flex items-center justify-center">
+              {error ? (
+                <span className="text-red-400 text-sm font-mono">{error}</span>
+              ) : renderedMath ? (
+                <div
+                  className="text-white text-lg"
+                  dangerouslySetInnerHTML={{ __html: renderedMath }}
+                />
+              ) : (
+                <span className="text-text-secondary/50 text-sm italic">
+                  Preview will appear here...
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* LaTeX Help */}
+          <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+            <h4 className="text-xs font-bold text-amber-400 mb-2">LaTeX Quick Reference</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs text-text-secondary font-mono">
+              <div><code>\frac{"{a}"}{"{b}"}</code> → Fraction</div>
+              <div><code>\sqrt{"{x}"}</code> → Square root</div>
+              <div><code>x^{"{n}"}</code> → Superscript</div>
+              <div><code>x_{"{n}"}</code> → Subscript</div>
+              <div><code>\sum_{"{i=1}"}^{"{n}"}</code> → Sum</div>
+              <div><code>\int_{"{a}"}^{"{b}"}</code> → Integral</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4 border-t border-white/10 bg-black/20">
+          <button
+            onClick={handleClose}
+            className="flex-1 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleInsert}
+            disabled={!latex.trim() || !!error}
+            className="flex-1 py-2.5 text-sm font-medium bg-gradient-to-r from-amber-500 to-orange-500 text-nexus-deep font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Insert Equation
+          </button>
+        </div>
+      </div>
+    </div>,
+    modalRoot
+  );
+};
 
 // ================== MARKDOWN PREVIEW COMPONENTS ==================
 const SyntaxHighlight = ({ code }) => {
   if (!code) return null;
 
   const tokenRegex =
-    /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\/\/.*|\/\*[\s\S]*?\*\/)|(\b(?:const|let|var|function|return|if|else|for|while|import|export|from|class|extends|try|catch|async|await|new|this|super|default|case|switch|break|continue|true|false|null|undefined)\b)|(\b\d+\b)|(\b[A-Z][a-zA-Z0-9_]*\b)|([^"'/a-zA-Z0-9_]+|[a-zA-Z0-9_]+)/g;
+    /(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|(\/\/.*|\/\*[\s\S]*?\*\/)|(\b(?:const|let|var|function|return|if|else|for|while|import|export|from|class|extends|try|catch|async|await|new|this|super|default|case|switch|break|continue|true|false|null|undefined)\b)|(\b\d+\b)|(\b[A-Z][a-zA-Z0-9_]*\b)|([^\"'/a-zA-Z0-9_]+|[a-zA-Z0-9_]+)/g;
 
   const tokens = [];
   let match;
@@ -146,12 +743,13 @@ const CodeBlock = ({ inline, className, children, ...props }) => {
   );
 };
 
-// Markdown Preview Component
+// Markdown Preview Component with Math Support
 const MarkdownPreview = ({ content }) => {
   return (
     <div className="markdown-content prose prose-invert max-w-none">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
           h1: ({ node, ...props }) => (
             <h1
@@ -237,6 +835,12 @@ const MarkdownPreview = ({ content }) => {
               {children}
             </CodeBlock>
           ),
+          img: ({ node, ...props }) => (
+            <img
+              className="max-w-full rounded-xl border border-white/10 my-4"
+              {...props}
+            />
+          ),
         }}
       >
         {preprocessMarkdown(content)}
@@ -302,6 +906,40 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const fileInputRef = useRef(null);
+  const markdownTextareaRef = useRef(null);
+  
+  // Modal states
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [showMathModal, setShowMathModal] = useState(false);
+
+  // Insert content handler
+  const handleInsertContent = (insertedContent) => {
+    if (editorMode === "markdown") {
+      // Insert at cursor position or append
+      if (markdownTextareaRef.current) {
+        const textarea = markdownTextareaRef.current;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newContent = 
+          markdownContent.substring(0, start) + 
+          insertedContent + 
+          markdownContent.substring(end);
+        setMarkdownContent(newContent);
+        // Set cursor position after insert
+        setTimeout(() => {
+          textarea.focus();
+          const newPos = start + insertedContent.length;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+      } else {
+        setMarkdownContent((prev) => prev + insertedContent);
+      }
+    } else {
+      // Append to Quill content
+      setContent((prev) => prev + insertedContent);
+    }
+  };
 
   const templates = {
     meeting:
@@ -467,20 +1105,23 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
           </button>
           <div className="w-px h-4 bg-card-border mx-1"></div>
           <button
-            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
+            onClick={() => setShowImageModal(true)}
+            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-purple transition-colors"
             title="Insert Image"
           >
             <ImageIcon size={16} />
           </button>
           <button
+            onClick={() => setShowCodeModal(true)}
             className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
-            title="Code Block"
+            title="Insert Code Block"
           >
             <Code size={16} />
           </button>
           <button
-            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
-            title="Latex Mode"
+            onClick={() => setShowMathModal(true)}
+            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-amber-400 transition-colors"
+            title="Insert Math Equation"
           >
             <span className="font-serif italic font-bold">∑</span>
           </button>
@@ -668,6 +1309,7 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
                 </span>
               </div>
               <textarea
+                ref={markdownTextareaRef}
                 value={markdownContent}
                 onChange={(e) => setMarkdownContent(e.target.value)}
                 placeholder="# Start typing your Markdown here..."
@@ -701,6 +1343,26 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
       <div className="absolute bottom-2 right-4 text-[10px] text-gray-600">
         {editorMode === "markdown" ? "Markdown Mode" : "Docs Mode"}
       </div>
+
+      {/* Modals */}
+      <ImageModal
+        isOpen={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        onInsert={handleInsertContent}
+        mode={editorMode}
+      />
+      <CodeModal
+        isOpen={showCodeModal}
+        onClose={() => setShowCodeModal(false)}
+        onInsert={handleInsertContent}
+        mode={editorMode}
+      />
+      <MathModal
+        isOpen={showMathModal}
+        onClose={() => setShowMathModal(false)}
+        onInsert={handleInsertContent}
+        mode={editorMode}
+      />
     </div>
   );
 };
