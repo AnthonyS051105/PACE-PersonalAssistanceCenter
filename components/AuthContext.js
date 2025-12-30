@@ -67,6 +67,27 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
+                redirectTo: window.location.origin
+            }
+        });
+        
+        if (error) throw error;
+        return { success: true, data };
+    } catch(error) {
+        console.error("Google Login Error:", error);
+        return { success: false, error: error.message };
+    }
+  };
+
   const register = async (email, password, username) => {
     try {
       const response = await fetch('/api/auth/register', {
@@ -112,6 +133,7 @@ export function AuthProvider({ children }) {
     user,
     loading,
     login,
+    loginWithGoogle,
     register,
     logout,
   };

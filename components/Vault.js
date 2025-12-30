@@ -29,7 +29,9 @@ import {
   Filter,
   ChevronDown,
   Download,
+  Upload,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 // Smart icon detection based on category name keywords
 const getCategoryIcon = (categoryName, size = 16) => {
@@ -158,16 +160,21 @@ const getCategoryIcon = (categoryName, size = 16) => {
   return <LinkIcon size={size} className="text-nexus-teal" />;
 };
 
-const Vault = ({ searchQuery = "", items = [], setItems }) => {
+const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
   const [localSearch, setLocalSearch] = useState("");
   const [viewMode, setViewMode] = useState("list"); // "list" | "add" | "settings"
-  const [categoryFilter, setCategoryFilter] = useState("all"); // "all" or category id
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  
+  // Add Resource State
+  const [addType, setAddType] = useState("link"); // "link" | "file"
   const [newLink, setNewLink] = useState({
     title: "",
     url: "",
     category: "other",
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [urlError, setUrlError] = useState("");
 
   // URL validation function
@@ -232,12 +239,8 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
     localStorage.setItem("vault_categories", JSON.stringify(categories));
   }, [categories]);
 
-  // Persist items to localStorage
-  useEffect(() => {
-    if (items.length > 0) {
-      localStorage.setItem("vault_links", JSON.stringify(items));
-    }
-  }, [items]);
+  // Items are now passed from App.js via Supabase fetch
+
 
   const filteredLinks = items.filter((link) => {
     const matchesGlobal = link.title
@@ -251,29 +254,103 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
     return matchesGlobal && matchesLocal && matchesCategory;
   });
 
-  const handleAdd = () => {
-    if (!newLink.title || !newLink.url) return;
-
-    if (!isValidUrl(newLink.url)) {
-      setUrlError("Please enter a valid URL (e.g., https://example.com)");
+  const handleSave = async () => {
+    if (!user) {
+      alert("You must be logged in to save.");
       return;
     }
 
-    const item = {
-      id: Date.now().toString(),
-      ...newLink,
-    };
+    try {
+      setIsUploading(true);
+      let targetUrl = newLink.url;
+      let storagePath = null;
+      let fileSize = null;
 
-    setItems([...items, item]);
-    setNewLink({ title: "", url: "", category: "other" });
-    setUrlError("");
-    setViewMode("list");
+      // Handle File Upload
+      if (addType === "file" && selectedFile) {
+        const fileExt = selectedFile.name.split(".").pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("vault")
+          .upload(filePath, selectedFile);
+
+        if (uploadError) throw uploadError;
+
+        // Get Public URL
+        const { data: publicUrlData } = supabase.storage
+          .from("vault")
+          .getPublicUrl(filePath);
+          
+        targetUrl = publicUrlData.publicUrl;
+        storagePath = filePath;
+        fileSize = selectedFile.size;
+      } else if (addType === "link") {
+         if (!isValidUrl(newLink.url)) {
+            setUrlError("Please enter a valid URL");
+            setIsUploading(false);
+            return;
+         }
+      }
+
+      // Insert into Database
+      const { error: dbError } = await supabase.from("vault_items").insert({
+        user_id: user.id,
+        title: newLink.title,
+        url: targetUrl,
+        category: newLink.category,
+        type: addType,
+        storage_path: storagePath,
+        size: fileSize
+      });
+
+      if (dbError) throw dbError;
+
+      // Reset Form & Refresh
+      setNewLink({ title: "", url: "", category: "other" });
+      setSelectedFile(null);
+      setAddType("link");
+      setViewMode("list");
+      if (onRefresh) onRefresh();
+
+    } catch (error) {
+      console.error("Error saving resource:", error);
+      alert("Failed to save resource: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleDelete = (e, id) => {
+  const handleDelete = async (e, id) => {
     e.preventDefault();
     e.stopPropagation();
-    setItems(items.filter((l) => l.id !== id));
+    
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+        // Optimistic update
+        setItems(items.filter((l) => l.id !== id));
+
+        // Find item to check if it's a file
+        const item = items.find(i => i.id === id);
+        
+        // Delete from DB
+        const { error } = await supabase.from("vault_items").delete().eq("id", id);
+        if (error) throw error;
+        
+        // Delete from Storage if it's a file
+        if (item && item.storage_path) {
+            await supabase.storage.from("vault").remove([item.storage_path]);
+        }
+        
+        if (onRefresh) onRefresh();
+    } catch (err) {
+        console.error("Error deleting item:", err);
+        // Revert valid logic would be complex here without deep copy, 
+        // effectively we rely on next fetch.
+        if (onRefresh) onRefresh(); 
+    }
   };
 
   // Category Management Functions
@@ -388,6 +465,26 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
             </button>
           </div>
 
+          {/* Toggle Type */}
+          <div className="flex bg-input-bg rounded-lg p-1 border border-card-border mb-2">
+            <button
+               onClick={() => setAddType("link")}
+               className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${
+                  addType === "link" ? "bg-nexus-purple text-white" : "text-text-secondary hover:text-text-primary"
+               }`}
+            >
+                Link
+            </button>
+            <button
+               onClick={() => setAddType("file")}
+               className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${
+                  addType === "file" ? "bg-nexus-teal text-nexus-deep" : "text-text-secondary hover:text-text-primary"
+               }`}
+            >
+                File Upload
+            </button>
+          </div>
+
           <input
             type="text"
             placeholder="Title (e.g. Project Docs)"
@@ -396,22 +493,41 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
             className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none focus:border-nexus-purple transition-colors"
           />
 
-          <div className="flex flex-col gap-1">
-            <input
-              type="text"
-              placeholder="URL (https://...)"
-              value={newLink.url}
-              onChange={handleUrlChange}
-              className={`bg-input-bg border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none transition-colors ${
-                urlError
-                  ? "border-red-500 focus:border-red-500"
-                  : "border-card-border focus:border-nexus-purple"
-              }`}
-            />
-            {urlError && (
-              <span className="text-red-500 text-[10px]">{urlError}</span>
-            )}
-          </div>
+          {addType === "link" ? (
+             <div className="flex flex-col gap-1">
+                <input
+                  type="text"
+                  placeholder="URL (https://...)"
+                  value={newLink.url}
+                  onChange={handleUrlChange}
+                  className={`bg-input-bg border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none transition-colors ${
+                    urlError
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-card-border focus:border-nexus-purple"
+                  }`}
+                />
+                {urlError && (
+                  <span className="text-red-500 text-[10px]">{urlError}</span>
+                )}
+             </div>
+          ) : (
+             <div className="flex flex-col gap-1">
+                 <input
+                    type="file"
+                    onChange={(e) => {
+                        const file = e.target.files[0];
+                        setSelectedFile(file);
+                        if(file && !newLink.title) {
+                            setNewLink({...newLink, title: file.name});
+                        }
+                    }}
+                    className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-nexus-teal file:text-nexus-deep hover:file:bg-nexus-teal/80"
+                 />
+                 <span className="text-[10px] text-text-secondary">
+                    Max size: 50MB
+                 </span>
+             </div>
+          )}
 
           <div className="grid grid-cols-4 gap-2">
             {categories.map((cat) => (
@@ -435,11 +551,23 @@ const Vault = ({ searchQuery = "", items = [], setItems }) => {
           </div>
 
           <button
-            onClick={handleAdd}
-            disabled={!newLink.title || !newLink.url || urlError}
-            className="mt-auto bg-nexus-teal text-nexus-deep py-2 rounded-lg text-xs font-bold hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSave}
+            disabled={
+                !newLink.title || 
+                (addType === "link" && !newLink.url) || 
+                (addType === "file" && !selectedFile) ||
+                isUploading
+            }
+            className="mt-auto bg-nexus-teal text-nexus-deep py-2 rounded-lg text-xs font-bold hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Save Resource
+            {isUploading ? (
+                <>Saving...</>
+            ) : (
+                <>
+                    <Plus size={14} />
+                    Save Resource
+                </>
+            )}
           </button>
         </div>
       ) : viewMode === "settings" ? (

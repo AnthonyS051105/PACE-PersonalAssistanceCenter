@@ -215,7 +215,11 @@ const BentoCard = ({
       {/* Content - Responsive to card size */}
       <div
         className={`flex-1 ${
-          isCompact ? "p-3 pt-1" : "p-5 pt-2"
+          props.contentPadding === false
+            ? "p-0"
+            : isCompact
+            ? "p-3 pt-1"
+            : "p-5 pt-2"
         } z-10 overflow-hidden overflow-y-auto relative`}
       >
         {React.Children.map(children, (child) => {

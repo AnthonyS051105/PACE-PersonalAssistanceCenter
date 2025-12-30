@@ -8,12 +8,14 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 const Agenda = ({
   searchQuery = "",
   events = [],
   setEvents,
   isFullPage = false,
+  user
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -110,6 +112,22 @@ const Agenda = ({
 
     if (setEvents) {
       setEvents([...events, newEvent]);
+    }
+
+    if (user) {
+        supabase.from("calendar_events").insert({
+            user_id: user.id,
+            title: newEvent.title,
+            start_time: newEvent.startTime.toISOString(),
+            end_time: newEvent.endTime.toISOString(), // Assuming 1 hour duration logic from above
+            type: newEvent.type,
+            description: newEvent.description
+        }).select().then(({ data }) => {
+            if (data && data[0] && setEvents) {
+               // Update ID
+               setEvents(prev => prev.map(e => e.id === newEvent.id ? {...e, id: data[0].id} : e));
+            }
+        });
     }
 
     setNewEventTitle("");

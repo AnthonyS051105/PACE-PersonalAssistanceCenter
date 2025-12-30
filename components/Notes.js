@@ -21,7 +21,9 @@ import {
   X,
   Link,
   FileImage,
+  CloudUpload,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { summarizeNotes } from "../lib/geminiService";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -850,8 +852,9 @@ const MarkdownPreview = ({ content }) => {
 };
 
 // ================== MAIN NOTES COMPONENT ==================
-const Notes = ({ searchQuery = "", content, setContent }) => {
+const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMarkdownContent, user }) => {
   const contentRef = useRef(content);
+  const markdownRef = useRef(markdownContent);
   const [lastSaved, setLastSaved] = useState(null);
   
   // Mode state: "docs" (Quill WYSIWYG) or "markdown" (split-pane)
@@ -860,46 +863,34 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
   // Markdown view mode: "edit", "split", "preview"
   const [viewMode, setViewMode] = useState("split");
   
-  // Separate content for markdown mode
-  const [markdownContent, setMarkdownContent] = useState(
-    "# Welcome to Neural Notes\n\n* Type standard **Markdown** on the left.\n* See the *live preview* on the right.\n\n## Code Example\n```javascript\nconsole.log(\"Hello Nexus\");\n```"
-  );
-
-  // Update ref whenever content changes
+  // Update refs
   useEffect(() => {
     contentRef.current = content;
-  }, [content]);
+    markdownRef.current = markdownContent;
+  }, [content, markdownContent]);
 
-  // Auto-save logic
+  // Auto-save logic (Debounced)
   useEffect(() => {
-    const saveContent = () => {
-      localStorage.setItem("nexus_notes_content", contentRef.current);
-      localStorage.setItem("nexus_notes_markdown", markdownContent);
-      setLastSaved(new Date());
+    if (!user) return;
+
+    const saveToCloud = async () => {
+        try {
+            const { error } = await supabase.from("user_notes_state").upsert({
+                user_id: user.id,
+                content: contentRef.current,
+                markdown_content: markdownRef.current,
+                updated_at: new Date().toISOString()
+            });
+            if (!error) setLastSaved(new Date());
+        } catch (err) {
+            console.error("Auto-save failed:", err);
+        }
     };
 
-    const interval = setInterval(saveContent, 30000);
+    const timeoutId = setTimeout(saveToCloud, 2000); // Save after 2s of inactivity
 
-    const handleBeforeUnload = () => {
-      saveContent();
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      saveContent();
-    };
-  }, [markdownContent]);
-
-  // Load markdown content from localStorage on mount
-  useEffect(() => {
-    const savedMarkdown = localStorage.getItem("nexus_notes_markdown");
-    if (savedMarkdown) {
-      setMarkdownContent(savedMarkdown);
-    }
-  }, []);
+    return () => clearTimeout(timeoutId);
+  }, [content, markdownContent, user]);
 
   const hasMatch =
     searchQuery && content.toLowerCase().includes(searchQuery.toLowerCase());
@@ -1048,17 +1039,53 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
     }
   };
 
-  const handleArchive = () => {
-    const exportContent = editorMode === "markdown" ? markdownContent : content;
-    const blob = new Blob([exportContent], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `note-${new Date().toISOString().split("T")[0]}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleSaveToVault = async () => {
+    if (!user) {
+        alert("Please login to save to Vault.");
+        return;
+    }
+    
+    const filename = prompt("Enter a filename for this note (e.g. MyMeeting.md):", `Note-${new Date().toISOString().split("T")[0]}.md`);
+    if (!filename) return;
+
+    try {
+        const exportContent = editorMode === "markdown" ? markdownContent : content;
+        // If docs mode, maybe convert HTML to something else or just save as .html? 
+        // For now, let's treat docs as HTML and markdown as MD.
+        const type = editorMode === "markdown" ? "markdown" : "html";
+        const file = new File([exportContent], filename, { type: type === "markdown" ? "text/markdown" : "text/html" });
+        
+        const filePath = `${user.id}/${filename}`;
+        
+        // Upload
+        const { error: uploadError } = await supabase.storage
+            .from("vault")
+            .upload(filePath, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+        
+        // Get URL
+        const { data: publicData } = supabase.storage.from("vault").getPublicUrl(filePath);
+
+        // Add to Vault Items
+        const { error: dbError } = await supabase.from("vault_items").insert({
+            user_id: user.id,
+            title: filename,
+            url: publicData.publicUrl,
+            category: "doc",
+            type: "note",
+            storage_path: filePath,
+            size: file.size
+        });
+
+        if (dbError) throw dbError;
+        
+        alert("Saved to Vault!");
+        
+    } catch (err) {
+        console.error("Error saving to vault:", err);
+        alert("Failed to save to vault: " + err.message);
+    }
   };
 
   const handleExport = () => {
@@ -1257,11 +1284,11 @@ const Notes = ({ searchQuery = "", content, setContent }) => {
             </div>
           )}
           <button
-            onClick={handleArchive}
+            onClick={handleSaveToVault}
             className="flex items-center gap-1 text-[10px] bg-nexus-deep border border-nexus-teal/30 text-nexus-teal px-2 py-1 rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all"
-            title="Archive as Markdown"
+            title="Save to Data Vault"
           >
-            <Archive size={12} /> MD
+            <CloudUpload size={12} /> Save to Vault
           </button>
           <button
             onClick={handleExport}

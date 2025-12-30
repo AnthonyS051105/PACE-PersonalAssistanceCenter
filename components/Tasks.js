@@ -21,8 +21,9 @@ import {
   AlignLeft,
   Tag,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
-const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
+const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "", user }) => {
   const [mounted, setMounted] = useState(false);
   const [newTask, setNewTask] = useState("");
 
@@ -138,16 +139,28 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
     },
   };
 
-  const toggleTask = (id) => {
+  const toggleTask = async (id) => {
+    // Optimistic Update
+    const task = tasks.find(t => t.id === id);
+    const newStatus = !task.completed;
+    
     setTasks(
-      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+      tasks.map((t) => (t.id === id ? { ...t, completed: newStatus } : t))
     );
+
+    if (user) {
+        await supabase.from("tasks").update({ completed: newStatus }).eq("id", id);
+    }
   };
 
-  const deleteTask = (id) => {
+  const deleteTask = async (id) => {
     if (window.confirm("Are you sure you want to delete this mission?")) {
       setTasks(tasks.filter((t) => t.id !== id));
       if (selectedTaskId === id) setSelectedTaskId(null);
+      
+      if (user) {
+          await supabase.from("tasks").delete().eq("id", id);
+      }
     }
   };
 
@@ -161,11 +174,33 @@ const Tasks = ({ tasks, setTasks, compact = false, searchQuery = "" }) => {
         : new Date(Date.now() + 86400000), // Default tomorrow
       completed: false,
       priority: newPriority,
-      tags: [],
+      tags: [], // Parsing tags from description could be added here
       reminderTime: newReminder ? new Date(newReminder) : null,
       reminderSent: false,
     };
+
     setTasks([task, ...tasks]);
+
+    if (user) {
+        // We need to parse ID carefully or let DB generate it. 
+        // For simplicity, we let DB generate ID, but we need to update local state or re-fetch.
+        // Better: Insert and use returned ID.
+        supabase.from("tasks").insert({
+            user_id: user.id,
+            title: task.title,
+            description: "",
+            deadline: task.deadline.toISOString(),
+            priority: task.priority,
+            completed: false,
+            tags: task.tags,
+            reminderTime: task.reminderTime ? task.reminderTime.toISOString() : null
+        }).select().then(({ data, error }) => {
+            if (data && data[0]) {
+                // Update local task with real ID
+                setTasks(prev => prev.map(t => t.id === task.id ? {...t, id: data[0].id} : t));
+            }
+        });
+    }
     setNewTask("");
     setNewDeadline("");
     setNewPriority("medium");

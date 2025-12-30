@@ -412,3 +412,70 @@
     transform: translate(-2%, -2%) rotate(1deg);
   }
 }
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 5px 0; /* Minimized margin */
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7rem; /* Smaller text */
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.divider span {
+  padding: 0 10px;
+}
+
+/* Google Button */
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05); /* Dark background */
+  border: 1px solid rgba(147, 51, 234, 0.3); /* Purple border like inputs */
+  border-radius: 12px;
+  color: #fff; /* White text */
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.google-btn:hover {
+  background: rgba(147, 51, 234, 0.1);
+  border-color: #9333ea;
+  box-shadow: 0 0 15px rgba(147, 51, 234, 0.2);
+  transform: translateY(-1px);
+}
+
+.google-btn:active {
+  transform: translateY(0);
+}
+
+.google-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  /* Ensure icon colors pop against dark bg */
+  filter: drop-shadow(0 0 1px rgba(255,255,255,0.2)); 
+}

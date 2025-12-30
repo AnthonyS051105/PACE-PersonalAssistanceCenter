@@ -48,6 +48,7 @@ import AIChat from "../components/AIChat";
 import Notes from "../components/Notes";
 import Vault from "../components/Vault";
 import SystemMonitor from "../components/SystemMonitor";
+import { supabase } from "@/lib/supabase";
 
 // Sortable Item Wrapper Component
 const SortableItem = ({
@@ -342,76 +343,87 @@ const App = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showSettings]);
 
-  const [tasks, setTasks] = useState([
-    {
-      id: "1",
-      title: "Complete Project Report",
-      description:
-        "Finalize the introduction and methodology sections. Ensure all citations are in APA format.",
-      deadline: new Date(Date.now() + 86400000),
-      completed: false,
-      priority: "high",
-      tags: ["uni"],
-    },
-    {
-      id: "2",
-      title: "Review Calculus III",
-      description:
-        "Go through Chapter 5: Multiple Integrals. Solve practice problems 1-10.",
-      deadline: new Date(Date.now() - 86400000),
-      completed: false,
-      priority: "medium",
-      tags: ["study"],
-    },
-    {
-      id: "3",
-      title: "Buy Groceries",
-      description: "Milk, Eggs, Bread, Chicken Breast, Broccoli, Rice.",
-      deadline: new Date(Date.now() + 172800000),
-      completed: true,
-      priority: "low",
-      tags: ["personal"],
-    },
-  ]);
+  const [tasks, setTasks] = useState([]);
 
   // Lifted State for Search
-  const [events, setEvents] = useState([
-    {
-      id: "1",
-      title: "Web Dev Lecture",
-      startTime: new Date(),
-      endTime: new Date(),
-      type: "lecture",
-    },
-    {
-      id: "2",
-      title: "Team Meeting",
-      startTime: new Date(),
-      endTime: new Date(),
-      type: "meeting",
-    },
-  ]);
+  // Lifted State for Search
+  const [events, setEvents] = useState([]);
 
-  const [vaultItems, setVaultItems] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("vault_links");
-      if (saved) return JSON.parse(saved);
-    }
-    return [
-      { id: "1", title: "Calculus Syllabus", url: "#", category: "doc" },
-      { id: "2", title: "React Crash Course", url: "#", category: "youtube" },
-      { id: "3", title: "Project Drive", url: "#", category: "drive" },
-      { id: "4", title: "Design System", url: "#", category: "other" },
-    ];
-  });
+  const [vaultItems, setVaultItems] = useState([]);
 
-  const [noteContent, setNoteContent] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("nexus_notes_content");
-      if (saved) return saved;
+  const [noteContent, setNoteContent] = useState(
+    "# Welcome to Neural Notes\n\n- Start typing to auto-save to the cloud."
+  );
+  const [noteMarkdown, setNoteMarkdown] = useState(""); // Track markdown separately if needed
+
+  // Fetch Data from Supabase
+  const fetchData = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch Vault Items
+      const { data: vData, error: vError } = await supabase
+        .from("vault_items")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!vError && vData) {
+        setVaultItems(vData);
+      }
+
+      // Fetch Notes State
+      const { data: nData, error: nError } = await supabase
+        .from("user_notes_state")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!nError && nData) {
+        if (nData.content) setNoteContent(nData.content);
+        if (nData.markdown_content) setNoteMarkdown(nData.markdown_content);
+      }
+
+      // Fetch Tasks
+      const { data: tData, error: tError } = await supabase
+        .from("tasks")
+        .select("*")
+        .order("deadline", { ascending: true });
+        
+      if (!tError && tData) {
+        // Convert string dates back to Date objects
+        const parsedTasks = tData.map(t => ({
+            ...t,
+            deadline: new Date(t.deadline),
+            reminderTime: t.reminderTime ? new Date(t.reminderTime) : null
+        }));
+        setTasks(parsedTasks);
+      }
+
+      // Fetch Events
+      const { data: eData, error: eError } = await supabase
+        .from("calendar_events")
+        .select("*")
+        .order("start_time", { ascending: true });
+
+      if (!eError && eData) {
+          const parsedEvents = eData.map(e => ({
+              ...e,
+              startTime: new Date(e.start_time),
+              endTime: new Date(e.end_time)
+          }));
+          setEvents(parsedEvents);
+      }
+
+    } catch (err) {
+      console.error("Error fetching data:", err);
     }
-    return "# Lecture 4: React Hooks\n\n- useState\n- useEffect\n\nEquation: $E=mc^2$";
-  });
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   // Search Logic
   const [searchResults, setSearchResults] = useState([]);
@@ -923,22 +935,12 @@ const App = () => {
                                 colSpan={layout.ai.col}
                                 rowSpan={layout.ai.row}
                               >
+
                                 <BentoCard
                                   variants={itemVariants}
                                   colSpan={layout.ai.col}
                                   rowSpan={layout.ai.row}
-                                  title="A.C.E"
                                   onTripleClick={() => setActiveTab("ai")}
-                                  icon={
-                                    <div className="relative w-8 h-8">
-                                      <Image
-                                        src="/assets/ai-mascot.png"
-                                        alt="A.C.E Mascot"
-                                        fill
-                                        className="object-contain"
-                                      />
-                                    </div>
-                                  }
                                   glowColor={hexToRgba(cardColors.ai, 0.4)}
                                   isCustomizing={customizationMode}
                                   pickerColor={cardColors.ai}
@@ -949,8 +951,9 @@ const App = () => {
                                     handleResize("ai", "static", c, r)
                                   }
                                   className="min-h-[500px]"
+                                  contentPadding={false}
                                 >
-                                  <AIChat />
+                                  <AIChat user={user} showHeader={true} />
                                 </BentoCard>
                               </SortableItem>
                             );
@@ -986,6 +989,7 @@ const App = () => {
                                     setTasks={setTasks}
                                     compact={true}
                                     searchQuery={searchQuery}
+                                    user={user}
                                   />
                                 </BentoCard>
                               </SortableItem>
@@ -1021,6 +1025,8 @@ const App = () => {
                                     searchQuery={searchQuery}
                                     items={vaultItems}
                                     setItems={setVaultItems}
+                                    onRefresh={fetchData}
+                                    user={user}
                                   />
                                 </BentoCard>
                               </SortableItem>
@@ -1056,6 +1062,7 @@ const App = () => {
                                     searchQuery={searchQuery}
                                     events={events}
                                     setEvents={setEvents}
+                                    user={user}
                                   />
                                 </BentoCard>
                               </SortableItem>
@@ -1091,6 +1098,9 @@ const App = () => {
                                     searchQuery={searchQuery}
                                     content={noteContent}
                                     setContent={setNoteContent}
+                                    markdownContent={noteMarkdown}
+                                    setMarkdownContent={setNoteMarkdown}
+                                    user={user}
                                   />
                                 </BentoCard>
                               </SortableItem>
@@ -1162,6 +1172,7 @@ const App = () => {
                     events={events}
                     setEvents={setEvents}
                     isFullPage={true}
+                    user={user}
                   />
                 </div>
               </motion.div>
@@ -1185,6 +1196,7 @@ const App = () => {
                     tasks={tasks}
                     setTasks={setTasks}
                     searchQuery={searchQuery}
+                    user={user}
                   />
                 </div>
               </motion.div>
@@ -1208,6 +1220,9 @@ const App = () => {
                     searchQuery={searchQuery}
                     content={noteContent}
                     setContent={setNoteContent}
+                    markdownContent={noteMarkdown}
+                    setMarkdownContent={setNoteMarkdown}
+                    user={user}
                   />
                 </div>
               </motion.div>
@@ -1231,6 +1246,8 @@ const App = () => {
                     searchQuery={searchQuery}
                     items={vaultItems}
                     setItems={setVaultItems}
+                    onRefresh={fetchData}
+                    user={user}
                   />
                 </div>
               </motion.div>
@@ -1250,7 +1267,7 @@ const App = () => {
                   Nexus AI Core - Full Interface
                 </h2>
                 <div className="flex-1 overflow-hidden">
-                  <AIChat />
+                  <AIChat user={user} />
                 </div>
               </motion.div>
             )}
