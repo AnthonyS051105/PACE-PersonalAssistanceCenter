@@ -18,6 +18,7 @@ const BentoCard = ({
   onTripleClick,
   dragHandleProps,
   isDragging = false,
+  contentPadding = true,
   ...props
 }) => {
   // Parse colSpan and rowSpan to numbers if they're strings
@@ -105,7 +106,8 @@ const BentoCard = ({
       onClick={(e) => {
         const targetTag = e.target.tagName.toUpperCase();
         const isInput =
-          ["INPUT", "TEXTAREA"].includes(targetTag) || e.target.isContentEditable;
+          ["INPUT", "TEXTAREA"].includes(targetTag) ||
+          e.target.isContentEditable;
 
         if (e.detail === 3 && onTripleClick && !isInput) {
           onTripleClick();
@@ -215,11 +217,7 @@ const BentoCard = ({
       {/* Content - Responsive to card size */}
       <div
         className={`flex-1 ${
-          props.contentPadding === false
-            ? "p-0"
-            : isCompact
-            ? "p-3 pt-1"
-            : "p-5 pt-2"
+          contentPadding === false ? "p-0" : isCompact ? "p-3 pt-1" : "p-5 pt-2"
         } z-10 overflow-hidden overflow-y-auto relative`}
       >
         {React.Children.map(children, (child) => {

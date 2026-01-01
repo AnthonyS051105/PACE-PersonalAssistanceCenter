@@ -39,10 +39,10 @@ import {
   Link as LinkIcon,
   ArrowLeft,
   Plus,
-  LogOut,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
+import ProfileCard from "../components/ProfileCard";
 import Tasks from "../components/Tasks";
 import AIChat from "../components/AIChat";
 import Notes from "../components/Notes";
@@ -388,13 +388,13 @@ const App = () => {
         .from("tasks")
         .select("*")
         .order("deadline", { ascending: true });
-        
+
       if (!tError && tData) {
         // Convert string dates back to Date objects
-        const parsedTasks = tData.map(t => ({
-            ...t,
-            deadline: new Date(t.deadline),
-            reminderTime: t.reminderTime ? new Date(t.reminderTime) : null
+        const parsedTasks = tData.map((t) => ({
+          ...t,
+          deadline: new Date(t.deadline),
+          reminderTime: t.reminderTime ? new Date(t.reminderTime) : null,
         }));
         setTasks(parsedTasks);
       }
@@ -406,14 +406,13 @@ const App = () => {
         .order("start_time", { ascending: true });
 
       if (!eError && eData) {
-          const parsedEvents = eData.map(e => ({
-              ...e,
-              startTime: new Date(e.start_time),
-              endTime: new Date(e.end_time)
-          }));
-          setEvents(parsedEvents);
+        const parsedEvents = eData.map((e) => ({
+          ...e,
+          startTime: new Date(e.start_time),
+          endTime: new Date(e.end_time),
+        }));
+        setEvents(parsedEvents);
       }
-
     } catch (err) {
       console.error("Error fetching data:", err);
     }
@@ -853,24 +852,8 @@ const App = () => {
               </AnimatePresence>
             </div>
 
-            {/* User Avatar with Logout */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={async () => {
-                  await logout();
-                  window.location.href = '/auth';
-                }}
-                className="p-2 rounded-full bg-nexus-glass border border-nexus-glassBorder text-gray-400 hover:text-red-400 hover:border-red-400/50 hover:bg-red-500/10 transition-all"
-                title="Sign Out"
-              >
-                <LogOut size={18} />
-              </button>
-              <div className="w-10 h-10 rounded-full bg-linear-to-tr from-nexus-purple to-nexus-teal flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-transform">
-                <span className="font-bold text-white">
-                  {user?.user_metadata?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                </span>
-              </div>
-            </div>
+            {/* User Profile Card */}
+            <ProfileCard theme={theme} setTheme={setTheme} />
           </motion.div>
         </motion.header>
 
@@ -935,7 +918,6 @@ const App = () => {
                                 colSpan={layout.ai.col}
                                 rowSpan={layout.ai.row}
                               >
-
                                 <BentoCard
                                   variants={itemVariants}
                                   colSpan={layout.ai.col}
