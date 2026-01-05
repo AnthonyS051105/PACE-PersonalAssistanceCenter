@@ -1378,6 +1378,7 @@ const App = () => {
                     markdownContent={noteMarkdown}
                     setMarkdownContent={setNoteMarkdown}
                     user={user}
+                    isFullPage={true}
                   />
                 </div>
               </motion.div>
@@ -1403,6 +1404,7 @@ const App = () => {
                     setItems={setVaultItems}
                     onRefresh={fetchData}
                     user={user}
+                    isFullPage={true}
                   />
                 </div>
               </motion.div>
@@ -1417,12 +1419,8 @@ const App = () => {
                 transition={{ duration: 0.3 }}
                 className="min-h-[80vh] bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl overflow-hidden flex flex-col"
               >
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <BrainCircuit className="text-nexus-teal" />
-                  Nexus AI Core - Full Interface
-                </h2>
                 <div className="flex-1 overflow-hidden">
-                  <AIChat user={user} />
+                  <AIChat user={user} isFullPage={true} showHeader={true} />
                 </div>
               </motion.div>
             )}

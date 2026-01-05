@@ -160,12 +160,19 @@ const getCategoryIcon = (categoryName, size = 16) => {
   return <LinkIcon size={size} className="text-nexus-teal" />;
 };
 
-const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
+const Vault = ({
+  searchQuery = "",
+  items = [],
+  setItems,
+  onRefresh,
+  user,
+  isFullPage = false,
+}) => {
   const [localSearch, setLocalSearch] = useState("");
   const [viewMode, setViewMode] = useState("list"); // "list" | "add" | "settings"
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  
+
   // Add Resource State
   const [addType, setAddType] = useState("link"); // "link" | "file"
   const [newLink, setNewLink] = useState({
@@ -241,7 +248,6 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
 
   // Items are now passed from App.js via Supabase fetch
 
-
   const filteredLinks = items.filter((link) => {
     const matchesGlobal = link.title
       .toLowerCase()
@@ -269,9 +275,11 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
       // Handle File Upload
       if (addType === "file" && selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const fileName = `${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from("vault")
           .upload(filePath, selectedFile);
@@ -282,16 +290,16 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
         const { data: publicUrlData } = supabase.storage
           .from("vault")
           .getPublicUrl(filePath);
-          
+
         targetUrl = publicUrlData.publicUrl;
         storagePath = filePath;
         fileSize = selectedFile.size;
       } else if (addType === "link") {
-         if (!isValidUrl(newLink.url)) {
-            setUrlError("Please enter a valid URL");
-            setIsUploading(false);
-            return;
-         }
+        if (!isValidUrl(newLink.url)) {
+          setUrlError("Please enter a valid URL");
+          setIsUploading(false);
+          return;
+        }
       }
 
       // Insert into Database
@@ -302,7 +310,7 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
         category: newLink.category,
         type: addType,
         storage_path: storagePath,
-        size: fileSize
+        size: fileSize,
       });
 
       if (dbError) throw dbError;
@@ -313,7 +321,6 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
       setAddType("link");
       setViewMode("list");
       if (onRefresh) onRefresh();
-
     } catch (error) {
       console.error("Error saving resource:", error);
       alert("Failed to save resource: " + error.message);
@@ -325,31 +332,34 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
   const handleDelete = async (e, id) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!window.confirm("Are you sure you want to delete this item?")) return;
 
     try {
-        // Optimistic update
-        setItems(items.filter((l) => l.id !== id));
+      // Optimistic update
+      setItems(items.filter((l) => l.id !== id));
 
-        // Find item to check if it's a file
-        const item = items.find(i => i.id === id);
-        
-        // Delete from DB
-        const { error } = await supabase.from("vault_items").delete().eq("id", id);
-        if (error) throw error;
-        
-        // Delete from Storage if it's a file
-        if (item && item.storage_path) {
-            await supabase.storage.from("vault").remove([item.storage_path]);
-        }
-        
-        if (onRefresh) onRefresh();
+      // Find item to check if it's a file
+      const item = items.find((i) => i.id === id);
+
+      // Delete from DB
+      const { error } = await supabase
+        .from("vault_items")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+
+      // Delete from Storage if it's a file
+      if (item && item.storage_path) {
+        await supabase.storage.from("vault").remove([item.storage_path]);
+      }
+
+      if (onRefresh) onRefresh();
     } catch (err) {
-        console.error("Error deleting item:", err);
-        // Revert valid logic would be complex here without deep copy, 
-        // effectively we rely on next fetch.
-        if (onRefresh) onRefresh(); 
+      console.error("Error deleting item:", err);
+      // Revert valid logic would be complex here without deep copy,
+      // effectively we rely on next fetch.
+      if (onRefresh) onRefresh();
     }
   };
 
@@ -468,20 +478,24 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
           {/* Toggle Type */}
           <div className="flex bg-input-bg rounded-lg p-1 border border-card-border mb-2">
             <button
-               onClick={() => setAddType("link")}
-               className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${
-                  addType === "link" ? "bg-nexus-purple text-white" : "text-text-secondary hover:text-text-primary"
-               }`}
+              onClick={() => setAddType("link")}
+              className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${
+                addType === "link"
+                  ? "bg-nexus-purple text-white"
+                  : "text-text-secondary hover:text-text-primary"
+              }`}
             >
-                Link
+              Link
             </button>
             <button
-               onClick={() => setAddType("file")}
-               className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${
-                  addType === "file" ? "bg-nexus-teal text-nexus-deep" : "text-text-secondary hover:text-text-primary"
-               }`}
+              onClick={() => setAddType("file")}
+              className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${
+                addType === "file"
+                  ? "bg-nexus-teal text-nexus-deep"
+                  : "text-text-secondary hover:text-text-primary"
+              }`}
             >
-                File Upload
+              File Upload
             </button>
           </div>
 
@@ -494,39 +508,39 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
           />
 
           {addType === "link" ? (
-             <div className="flex flex-col gap-1">
-                <input
-                  type="text"
-                  placeholder="URL (https://...)"
-                  value={newLink.url}
-                  onChange={handleUrlChange}
-                  className={`bg-input-bg border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none transition-colors ${
-                    urlError
-                      ? "border-red-500 focus:border-red-500"
-                      : "border-card-border focus:border-nexus-purple"
-                  }`}
-                />
-                {urlError && (
-                  <span className="text-red-500 text-[10px]">{urlError}</span>
-                )}
-             </div>
+            <div className="flex flex-col gap-1">
+              <input
+                type="text"
+                placeholder="URL (https://...)"
+                value={newLink.url}
+                onChange={handleUrlChange}
+                className={`bg-input-bg border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none transition-colors ${
+                  urlError
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-card-border focus:border-nexus-purple"
+                }`}
+              />
+              {urlError && (
+                <span className="text-red-500 text-[10px]">{urlError}</span>
+              )}
+            </div>
           ) : (
-             <div className="flex flex-col gap-1">
-                 <input
-                    type="file"
-                    onChange={(e) => {
-                        const file = e.target.files[0];
-                        setSelectedFile(file);
-                        if(file && !newLink.title) {
-                            setNewLink({...newLink, title: file.name});
-                        }
-                    }}
-                    className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-nexus-teal file:text-nexus-deep hover:file:bg-nexus-teal/80"
-                 />
-                 <span className="text-[10px] text-text-secondary">
-                    Max size: 50MB
-                 </span>
-             </div>
+            <div className="flex flex-col gap-1">
+              <input
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  setSelectedFile(file);
+                  if (file && !newLink.title) {
+                    setNewLink({ ...newLink, title: file.name });
+                  }
+                }}
+                className="bg-input-bg border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary focus:outline-none file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-nexus-teal file:text-nexus-deep hover:file:bg-nexus-teal/80"
+              />
+              <span className="text-[10px] text-text-secondary">
+                Max size: 50MB
+              </span>
+            </div>
           )}
 
           <div className="grid grid-cols-4 gap-2">
@@ -553,20 +567,20 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
           <button
             onClick={handleSave}
             disabled={
-                !newLink.title || 
-                (addType === "link" && !newLink.url) || 
-                (addType === "file" && !selectedFile) ||
-                isUploading
+              !newLink.title ||
+              (addType === "link" && !newLink.url) ||
+              (addType === "file" && !selectedFile) ||
+              isUploading
             }
             className="mt-auto bg-nexus-teal text-nexus-deep py-2 rounded-lg text-xs font-bold hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isUploading ? (
-                <>Saving...</>
+              <>Saving...</>
             ) : (
-                <>
-                    <Plus size={14} />
-                    Save Resource
-                </>
+              <>
+                <Plus size={14} />
+                Save Resource
+              </>
             )}
           </button>
         </div>
@@ -796,7 +810,13 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
+          <div
+            className={`grid ${
+              isFullPage
+                ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                : "grid-cols-2 gap-3"
+            } overflow-y-auto pr-1`}
+          >
             {filteredLinks.map((item) => {
               // Extract domain for favicon
               let faviconUrl = null;
@@ -813,33 +833,56 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative flex flex-col p-3 rounded-xl bg-input-bg border border-card-border hover:border-nexus-teal/50 transition-all hover:-translate-y-1"
+                  className={`group relative flex flex-col ${
+                    isFullPage ? "p-4" : "p-3"
+                  } rounded-xl bg-input-bg border border-card-border hover:border-nexus-teal/50 transition-all hover:-translate-y-1 ${
+                    isFullPage ? "min-h-[120px]" : ""
+                  }`}
                 >
                   <button
                     onClick={(e) => handleDelete(e, item.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+                    className={`absolute ${
+                      isFullPage ? "top-3 right-3 p-2" : "top-2 right-2 p-1.5"
+                    } bg-black/50 rounded-lg text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20`}
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={isFullPage ? 14 : 12} />
                   </button>
 
                   <div className="flex items-center justify-between mb-2">
-                    <div className="p-2 bg-card-bg rounded-lg group-hover:bg-nexus-teal/20 transition-colors">
-                      {getCategoryIcon(getCategoryName(item.category))}
+                    <div
+                      className={`${
+                        isFullPage ? "p-3" : "p-2"
+                      } bg-card-bg rounded-lg group-hover:bg-nexus-teal/20 transition-colors`}
+                    >
+                      {getCategoryIcon(
+                        getCategoryName(item.category),
+                        isFullPage ? 20 : 16
+                      )}
                     </div>
                     {faviconUrl ? (
                       <img
                         src={faviconUrl}
                         alt=""
-                        className="w-4 h-4 rounded-sm"
+                        className={`${
+                          isFullPage ? "w-5 h-5" : "w-4 h-4"
+                        } rounded-sm`}
                         onError={(e) => {
                           e.target.style.display = "none";
                         }}
                       />
                     ) : (
-                      <div className="w-2 h-2 rounded-full bg-card-border group-hover:bg-nexus-teal transition-colors" />
+                      <div
+                        className={`${
+                          isFullPage ? "w-2.5 h-2.5" : "w-2 h-2"
+                        } rounded-full bg-card-border group-hover:bg-nexus-teal transition-colors`}
+                      />
                     )}
                   </div>
-                  <span className="text-xs font-medium text-text-secondary group-hover:text-text-primary truncate">
+                  <span
+                    className={`${
+                      isFullPage ? "text-sm" : "text-xs"
+                    } font-medium text-text-secondary group-hover:text-text-primary truncate`}
+                  >
                     {item.title}
                   </span>
                 </a>
@@ -849,10 +892,16 @@ const Vault = ({ searchQuery = "", items = [], setItems, onRefresh, user }) => {
             {/* Add New Button */}
             <button
               onClick={() => setViewMode("add")}
-              className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-card-border hover:border-nexus-purple/50 text-text-secondary hover:text-nexus-purple transition-all gap-1 min-h-[80px]"
+              className={`flex flex-col items-center justify-center ${
+                isFullPage ? "p-4" : "p-3"
+              } rounded-xl border border-dashed border-card-border hover:border-nexus-purple/50 text-text-secondary hover:text-nexus-purple transition-all gap-1 ${
+                isFullPage ? "min-h-[120px]" : "min-h-[80px]"
+              }`}
             >
-              <Plus size={20} />
-              <span className="text-[10px]">Add Resource</span>
+              <Plus size={isFullPage ? 24 : 20} />
+              <span className={`${isFullPage ? "text-xs" : "text-[10px]"}`}>
+                Add Resource
+              </span>
             </button>
           </div>
         </>

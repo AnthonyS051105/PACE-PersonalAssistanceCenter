@@ -63,7 +63,11 @@ const ImageModal = ({ isOpen, onClose, onInsert, mode }) => {
     if (mode === "markdown") {
       onInsert(`![${altText || "image"}](${src})`);
     } else {
-      onInsert(`<img src="${src}" alt="${altText || "image"}" style="max-width: 100%; border-radius: 8px; margin: 8px 0;" />`);
+      onInsert(
+        `<img src="${src}" alt="${
+          altText || "image"
+        }" style="max-width: 100%; border-radius: 8px; margin: 8px 0;" />`
+      );
     }
     handleClose();
   };
@@ -270,7 +274,8 @@ const CodeModal = ({ isOpen, onClose, onInsert, mode }) => {
         setIsDropdownOpen(false);
       }
     };
-    if (isDropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    if (isDropdownOpen)
+      document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isDropdownOpen]);
 
@@ -325,7 +330,8 @@ const CodeModal = ({ isOpen, onClose, onInsert, mode }) => {
                 className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-text-primary text-sm flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-nexus-teal/50 transition-all"
               >
                 <span>
-                  {languages.find((l) => l.value === language)?.label || "Select Language"}
+                  {languages.find((l) => l.value === language)?.label ||
+                    "Select Language"}
                 </span>
                 <ChevronDown
                   size={16}
@@ -334,7 +340,7 @@ const CodeModal = ({ isOpen, onClose, onInsert, mode }) => {
                   }`}
                 />
               </button>
-              
+
               {isDropdownOpen && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto">
                   {languages.map((lang) => (
@@ -426,12 +432,21 @@ const MathModal = ({ isOpen, onClose, onInsert, mode }) => {
   useEffect(() => setMounted(true), []);
 
   const exampleEquations = [
-    { label: "Quadratic Formula", latex: "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}" },
+    {
+      label: "Quadratic Formula",
+      latex: "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
+    },
     { label: "Euler's Identity", latex: "e^{i\\pi} + 1 = 0" },
     { label: "Pythagorean Theorem", latex: "a^2 + b^2 = c^2" },
     { label: "Sum Notation", latex: "\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}" },
-    { label: "Integral", latex: "\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}" },
-    { label: "Matrix", latex: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" },
+    {
+      label: "Integral",
+      latex: "\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}",
+    },
+    {
+      label: "Matrix",
+      latex: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}",
+    },
   ];
 
   useEffect(() => {
@@ -470,7 +485,9 @@ const MathModal = ({ isOpen, onClose, onInsert, mode }) => {
       }
     } else {
       // For HTML mode, insert rendered KaTeX
-      onInsert(`<span class="katex-equation" data-latex="${latex}">${renderedMath}</span>`);
+      onInsert(
+        `<span class="katex-equation" data-latex="${latex}">${renderedMath}</span>`
+      );
     }
     handleClose();
   };
@@ -493,9 +510,13 @@ const MathModal = ({ isOpen, onClose, onInsert, mode }) => {
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-500/20 rounded-lg">
-              <span className="text-amber-400 font-serif text-lg font-bold">∑</span>
+              <span className="text-amber-400 font-serif text-lg font-bold">
+                ∑
+              </span>
             </div>
-            <h3 className="text-lg font-bold text-white">Insert Math Equation</h3>
+            <h3 className="text-lg font-bold text-white">
+              Insert Math Equation
+            </h3>
           </div>
           <button
             onClick={handleClose}
@@ -509,7 +530,9 @@ const MathModal = ({ isOpen, onClose, onInsert, mode }) => {
         <div className="p-5 space-y-4 overflow-y-auto flex-1">
           {/* Display Mode Toggle */}
           <div className="flex items-center gap-4">
-            <label className="text-xs font-medium text-text-secondary">Display Mode:</label>
+            <label className="text-xs font-medium text-text-secondary">
+              Display Mode:
+            </label>
             <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 border border-white/5">
               <button
                 onClick={() => setIsBlock(true)}
@@ -590,14 +613,38 @@ const MathModal = ({ isOpen, onClose, onInsert, mode }) => {
 
           {/* LaTeX Help */}
           <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
-            <h4 className="text-xs font-bold text-amber-400 mb-2">LaTeX Quick Reference</h4>
+            <h4 className="text-xs font-bold text-amber-400 mb-2">
+              LaTeX Quick Reference
+            </h4>
             <div className="grid grid-cols-2 gap-2 text-xs text-text-secondary font-mono">
-              <div><code>\frac{"{a}"}{"{b}"}</code> → Fraction</div>
-              <div><code>\sqrt{"{x}"}</code> → Square root</div>
-              <div><code>x^{"{n}"}</code> → Superscript</div>
-              <div><code>x_{"{n}"}</code> → Subscript</div>
-              <div><code>\sum_{"{i=1}"}^{"{n}"}</code> → Sum</div>
-              <div><code>\int_{"{a}"}^{"{b}"}</code> → Integral</div>
+              <div>
+                <code>
+                  \frac{"{a}"}
+                  {"{b}"}
+                </code>{" "}
+                → Fraction
+              </div>
+              <div>
+                <code>\sqrt{"{x}"}</code> → Square root
+              </div>
+              <div>
+                <code>x^{"{n}"}</code> → Superscript
+              </div>
+              <div>
+                <code>x_{"{n}"}</code> → Subscript
+              </div>
+              <div>
+                <code>
+                  \sum_{"{i=1}"}^{"{n}"}
+                </code>{" "}
+                → Sum
+              </div>
+              <div>
+                <code>
+                  \int_{"{a}"}^{"{b}"}
+                </code>{" "}
+                → Integral
+              </div>
             </div>
           </div>
         </div>
@@ -778,7 +825,10 @@ const MarkdownPreview = ({ content }) => {
             />
           ),
           p: ({ node, ...props }) => (
-            <p className="mb-3 leading-7 last:mb-0 text-text-primary" {...props} />
+            <p
+              className="mb-3 leading-7 last:mb-0 text-text-primary"
+              {...props}
+            />
           ),
           ul: ({ node, ...props }) => (
             <ul
@@ -793,10 +843,7 @@ const MarkdownPreview = ({ content }) => {
             />
           ),
           li: ({ node, ...props }) => (
-            <li
-              className="text-text-primary pl-1 leading-relaxed"
-              {...props}
-            />
+            <li className="text-text-primary pl-1 leading-relaxed" {...props} />
           ),
           blockquote: ({ node, ...props }) => (
             <blockquote className="border-l-4 border-nexus-purple bg-white/5 p-4 my-4 rounded-r-xl relative overflow-hidden">
@@ -852,17 +899,25 @@ const MarkdownPreview = ({ content }) => {
 };
 
 // ================== MAIN NOTES COMPONENT ==================
-const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMarkdownContent, user }) => {
+const Notes = ({
+  searchQuery = "",
+  content,
+  setContent,
+  markdownContent,
+  setMarkdownContent,
+  user,
+  isFullPage = false,
+}) => {
   const contentRef = useRef(content);
   const markdownRef = useRef(markdownContent);
   const [lastSaved, setLastSaved] = useState(null);
-  
+
   // Mode state: "docs" (Quill WYSIWYG) or "markdown" (split-pane)
   const [editorMode, setEditorMode] = useState("docs");
-  
+
   // Markdown view mode: "edit", "split", "preview"
   const [viewMode, setViewMode] = useState("split");
-  
+
   // Update refs
   useEffect(() => {
     contentRef.current = content;
@@ -874,17 +929,17 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
     if (!user) return;
 
     const saveToCloud = async () => {
-        try {
-            const { error } = await supabase.from("user_notes_state").upsert({
-                user_id: user.id,
-                content: contentRef.current,
-                markdown_content: markdownRef.current,
-                updated_at: new Date().toISOString()
-            });
-            if (!error) setLastSaved(new Date());
-        } catch (err) {
-            console.error("Auto-save failed:", err);
-        }
+      try {
+        const { error } = await supabase.from("user_notes_state").upsert({
+          user_id: user.id,
+          content: contentRef.current,
+          markdown_content: markdownRef.current,
+          updated_at: new Date().toISOString(),
+        });
+        if (!error) setLastSaved(new Date());
+      } catch (err) {
+        console.error("Auto-save failed:", err);
+      }
     };
 
     const timeoutId = setTimeout(saveToCloud, 2000); // Save after 2s of inactivity
@@ -898,7 +953,7 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
   const [showTemplates, setShowTemplates] = useState(false);
   const fileInputRef = useRef(null);
   const markdownTextareaRef = useRef(null);
-  
+
   // Modal states
   const [showImageModal, setShowImageModal] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
@@ -912,9 +967,9 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
         const textarea = markdownTextareaRef.current;
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const newContent = 
-          markdownContent.substring(0, start) + 
-          insertedContent + 
+        const newContent =
+          markdownContent.substring(0, start) +
+          insertedContent +
           markdownContent.substring(end);
         setMarkdownContent(newContent);
         // Set cursor position after insert
@@ -984,16 +1039,18 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result;
-      
+
       if (editorMode === "markdown") {
         // Append to markdown content
         setMarkdownContent(
-          (prev) => prev + "\n\n---\n**Imported File:** " + file.name + "\n\n" + text
+          (prev) =>
+            prev + "\n\n---\n**Imported File:** " + file.name + "\n\n" + text
         );
       } else {
         // Append to Quill content
         setContent(
-          (prev) => prev + "\n\n---\n**Imported File:** " + file.name + "\n\n" + text
+          (prev) =>
+            prev + "\n\n---\n**Imported File:** " + file.name + "\n\n" + text
         );
       }
     };
@@ -1013,7 +1070,7 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
 
   const handleSummarize = async () => {
     let plainText;
-    
+
     if (editorMode === "markdown") {
       plainText = markdownContent;
     } else {
@@ -1026,11 +1083,15 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
     setIsSummarizing(true);
     try {
       const summary = await summarizeNotes(plainText);
-      
+
       if (editorMode === "markdown") {
-        setMarkdownContent((prev) => prev + "\n\n---\n\n### AI Summary\n\n" + summary);
+        setMarkdownContent(
+          (prev) => prev + "\n\n---\n\n### AI Summary\n\n" + summary
+        );
       } else {
-        setContent((prev) => prev + "<h3>AI Summary</h3><p>" + summary + "</p>");
+        setContent(
+          (prev) => prev + "<h3>AI Summary</h3><p>" + summary + "</p>"
+        );
       }
     } catch (error) {
       console.error("Summarization failed", error);
@@ -1041,50 +1102,57 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
 
   const handleSaveToVault = async () => {
     if (!user) {
-        alert("Please login to save to Vault.");
-        return;
+      alert("Please login to save to Vault.");
+      return;
     }
-    
-    const filename = prompt("Enter a filename for this note (e.g. MyMeeting.md):", `Note-${new Date().toISOString().split("T")[0]}.md`);
+
+    const filename = prompt(
+      "Enter a filename for this note (e.g. MyMeeting.md):",
+      `Note-${new Date().toISOString().split("T")[0]}.md`
+    );
     if (!filename) return;
 
     try {
-        const exportContent = editorMode === "markdown" ? markdownContent : content;
-        // If docs mode, maybe convert HTML to something else or just save as .html? 
-        // For now, let's treat docs as HTML and markdown as MD.
-        const type = editorMode === "markdown" ? "markdown" : "html";
-        const file = new File([exportContent], filename, { type: type === "markdown" ? "text/markdown" : "text/html" });
-        
-        const filePath = `${user.id}/${filename}`;
-        
-        // Upload
-        const { error: uploadError } = await supabase.storage
-            .from("vault")
-            .upload(filePath, file, { upsert: true });
+      const exportContent =
+        editorMode === "markdown" ? markdownContent : content;
+      // If docs mode, maybe convert HTML to something else or just save as .html?
+      // For now, let's treat docs as HTML and markdown as MD.
+      const type = editorMode === "markdown" ? "markdown" : "html";
+      const file = new File([exportContent], filename, {
+        type: type === "markdown" ? "text/markdown" : "text/html",
+      });
 
-        if (uploadError) throw uploadError;
-        
-        // Get URL
-        const { data: publicData } = supabase.storage.from("vault").getPublicUrl(filePath);
+      const filePath = `${user.id}/${filename}`;
 
-        // Add to Vault Items
-        const { error: dbError } = await supabase.from("vault_items").insert({
-            user_id: user.id,
-            title: filename,
-            url: publicData.publicUrl,
-            category: "doc",
-            type: "note",
-            storage_path: filePath,
-            size: file.size
-        });
+      // Upload
+      const { error: uploadError } = await supabase.storage
+        .from("vault")
+        .upload(filePath, file, { upsert: true });
 
-        if (dbError) throw dbError;
-        
-        alert("Saved to Vault!");
-        
+      if (uploadError) throw uploadError;
+
+      // Get URL
+      const { data: publicData } = supabase.storage
+        .from("vault")
+        .getPublicUrl(filePath);
+
+      // Add to Vault Items
+      const { error: dbError } = await supabase.from("vault_items").insert({
+        user_id: user.id,
+        title: filename,
+        url: publicData.publicUrl,
+        category: "doc",
+        type: "note",
+        storage_path: filePath,
+        size: file.size,
+      });
+
+      if (dbError) throw dbError;
+
+      alert("Saved to Vault!");
     } catch (err) {
-        console.error("Error saving to vault:", err);
-        alert("Failed to save to vault: " + err.message);
+      console.error("Error saving to vault:", err);
+      alert("Failed to save to vault: " + err.message);
     }
   };
 
@@ -1115,52 +1183,100 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
 
   return (
     <div className="flex flex-col h-full relative">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex gap-2 items-center">
+      <div
+        className={`flex items-center justify-between ${
+          isFullPage ? "mb-4" : "mb-2"
+        } ${isFullPage ? "flex-wrap gap-2" : ""} flex-shrink-0`}
+      >
+        <div
+          className={`flex ${isFullPage ? "gap-3" : "gap-2"} items-center ${
+            isFullPage ? "flex-wrap" : ""
+          }`}
+        >
           {hasMatch && (
-            <span className="text-[10px] font-bold text-nexus-teal bg-nexus-teal/10 px-2 py-0.5 rounded border border-nexus-teal/30 animate-pulse mr-2">
+            <span
+              className={`${
+                isFullPage ? "text-xs" : "text-[10px]"
+              } font-bold text-nexus-teal bg-nexus-teal/10 px-2 py-0.5 rounded border border-nexus-teal/30 animate-pulse mr-2`}
+            >
               MATCH
             </span>
           )}
           <button
             onClick={handleSummarize}
             disabled={isSummarizing}
-            className="flex items-center gap-2 text-xs font-bold text-nexus-purple hover:text-nexus-purple/80 transition-colors mr-2"
+            className={`flex items-center gap-2 ${
+              isFullPage
+                ? "text-sm px-3 py-2 bg-nexus-purple/10 rounded-lg hover:bg-nexus-purple/20"
+                : "text-xs"
+            } font-bold text-nexus-purple hover:text-nexus-purple/80 transition-colors ${
+              isFullPage ? "" : "mr-2"
+            }`}
           >
-            <Sparkles size={14} />
+            <Sparkles size={isFullPage ? 16 : 14} />
             {isSummarizing ? "SUMMARIZING..." : "AI SUMMARIZE"}
           </button>
-          <div className="w-px h-4 bg-card-border mx-1"></div>
+          <div
+            className={`w-px ${isFullPage ? "h-6" : "h-4"} bg-card-border ${
+              isFullPage ? "mx-2" : "mx-1"
+            }`}
+          ></div>
           <button
             onClick={() => setShowImageModal(true)}
-            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-purple transition-colors"
+            className={`${
+              isFullPage ? "p-2" : "p-1.5"
+            } hover:bg-input-bg rounded ${
+              isFullPage ? "rounded-lg" : ""
+            } text-text-secondary hover:text-nexus-purple transition-colors`}
             title="Insert Image"
           >
-            <ImageIcon size={16} />
+            <ImageIcon size={isFullPage ? 18 : 16} />
           </button>
           <button
             onClick={() => setShowCodeModal(true)}
-            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
+            className={`${
+              isFullPage ? "p-2" : "p-1.5"
+            } hover:bg-input-bg rounded ${
+              isFullPage ? "rounded-lg" : ""
+            } text-text-secondary hover:text-nexus-teal transition-colors`}
             title="Insert Code Block"
           >
-            <Code size={16} />
+            <Code size={isFullPage ? 18 : 16} />
           </button>
           <button
             onClick={() => setShowMathModal(true)}
-            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-amber-400 transition-colors"
+            className={`${
+              isFullPage ? "p-2" : "p-1.5"
+            } hover:bg-input-bg rounded ${
+              isFullPage ? "rounded-lg" : ""
+            } text-text-secondary hover:text-amber-400 transition-colors`}
             title="Insert Math Equation"
           >
-            <span className="font-serif italic font-bold">∑</span>
+            <span
+              className={`font-serif italic font-bold ${
+                isFullPage ? "text-lg" : ""
+              }`}
+            >
+              ∑
+            </span>
           </button>
 
-          <div className="w-px h-4 bg-card-border mx-1"></div>
+          <div
+            className={`w-px ${isFullPage ? "h-6" : "h-4"} bg-card-border ${
+              isFullPage ? "mx-2" : "mx-1"
+            }`}
+          ></div>
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors"
+            className={`${
+              isFullPage ? "p-2" : "p-1.5"
+            } hover:bg-input-bg rounded ${
+              isFullPage ? "rounded-lg" : ""
+            } text-text-secondary hover:text-nexus-teal transition-colors`}
             title="Upload File"
           >
-            <Upload size={16} />
+            <Upload size={isFullPage ? 18 : 16} />
           </button>
           <input
             type="file"
@@ -1173,11 +1289,15 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
           <div className="relative">
             <button
               onClick={() => setShowTemplates(!showTemplates)}
-              className="p-1.5 hover:bg-input-bg rounded text-text-secondary hover:text-nexus-teal transition-colors flex items-center gap-1"
+              className={`${
+                isFullPage ? "p-2" : "p-1.5"
+              } hover:bg-input-bg rounded ${
+                isFullPage ? "rounded-lg" : ""
+              } text-text-secondary hover:text-nexus-teal transition-colors flex items-center gap-1`}
               title="Templates"
             >
-              <LayoutTemplate size={16} />
-              <ChevronDown size={10} />
+              <LayoutTemplate size={isFullPage ? 18 : 16} />
+              <ChevronDown size={isFullPage ? 12 : 10} />
             </button>
 
             {showTemplates && (
@@ -1204,12 +1324,22 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
             )}
           </div>
         </div>
-        <div className="flex gap-2 items-center">
+        <div
+          className={`flex ${isFullPage ? "gap-3" : "gap-2"} items-center ${
+            isFullPage ? "flex-wrap" : ""
+          }`}
+        >
           {/* Editor Mode Toggle */}
-          <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5 border border-white/5">
+          <div
+            className={`flex items-center gap-1 bg-black/20 rounded-lg ${
+              isFullPage ? "p-1" : "p-0.5"
+            } border border-white/5`}
+          >
             <button
               onClick={() => setEditorMode("docs")}
-              className={`px-2 py-1 text-[10px] font-bold rounded transition-all ${
+              className={`${
+                isFullPage ? "px-3 py-2 text-xs" : "px-2 py-1 text-[10px]"
+              } font-bold rounded transition-all ${
                 editorMode === "docs"
                   ? "bg-nexus-purple text-white"
                   : "text-text-secondary hover:text-text-primary"
@@ -1220,7 +1350,9 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
             </button>
             <button
               onClick={() => setEditorMode("markdown")}
-              className={`px-2 py-1 text-[10px] font-bold rounded transition-all ${
+              className={`${
+                isFullPage ? "px-3 py-2 text-xs" : "px-2 py-1 text-[10px]"
+              } font-bold rounded transition-all ${
                 editorMode === "markdown"
                   ? "bg-nexus-teal text-nexus-deep"
                   : "text-text-secondary hover:text-text-primary"
@@ -1230,51 +1362,71 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
               MD
             </button>
           </div>
-          
+
           {/* Markdown View Mode Toggle - Only show in markdown mode */}
           {editorMode === "markdown" && (
-            <div className="flex items-center gap-0.5 bg-black/30 rounded-lg p-0.5 border border-white/10">
+            <div
+              className={`flex items-center ${
+                isFullPage ? "gap-1" : "gap-0.5"
+              } bg-black/30 rounded-lg ${
+                isFullPage ? "p-1" : "p-0.5"
+              } border border-white/10`}
+            >
               <button
                 onClick={() => setViewMode("edit")}
-                className={`p-1.5 rounded transition-all ${
+                className={`${
+                  isFullPage ? "p-2" : "p-1.5"
+                } rounded transition-all ${
                   viewMode === "edit"
                     ? "bg-nexus-purple/30 text-nexus-purple"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
                 title="Edit Only"
               >
-                <Pen size={12} />
+                <Pen size={isFullPage ? 14 : 12} />
               </button>
               <button
                 onClick={() => setViewMode("split")}
-                className={`p-1.5 rounded transition-all ${
+                className={`${
+                  isFullPage ? "p-2" : "p-1.5"
+                } rounded transition-all ${
                   viewMode === "split"
                     ? "bg-nexus-purple/30 text-nexus-purple"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
                 title="Split View"
               >
-                <Columns size={12} />
+                <Columns size={isFullPage ? 14 : 12} />
               </button>
               <button
                 onClick={() => setViewMode("preview")}
-                className={`p-1.5 rounded transition-all ${
+                className={`${
+                  isFullPage ? "p-2" : "p-1.5"
+                } rounded transition-all ${
                   viewMode === "preview"
                     ? "bg-nexus-purple/30 text-nexus-purple"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
                 title="Preview Only"
               >
-                <Eye size={12} />
+                <Eye size={isFullPage ? 14 : 12} />
               </button>
             </div>
           )}
-          
-          <div className="w-px h-4 bg-card-border mx-1"></div>
-          
+
+          <div
+            className={`w-px ${isFullPage ? "h-6" : "h-4"} bg-card-border ${
+              isFullPage ? "mx-2" : "mx-1"
+            }`}
+          ></div>
+
           {lastSaved && (
-            <div className="flex items-center gap-1 text-[10px] text-gray-500 mr-2">
-              <Save size={12} />
+            <div
+              className={`flex items-center gap-1 ${
+                isFullPage ? "text-xs" : "text-[10px]"
+              } text-gray-500 ${isFullPage ? "mr-3" : "mr-2"}`}
+            >
+              <Save size={isFullPage ? 14 : 12} />
               <span>
                 {lastSaved.toLocaleTimeString([], {
                   hour: "2-digit",
@@ -1285,16 +1437,20 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
           )}
           <button
             onClick={handleSaveToVault}
-            className="flex items-center gap-1 text-[10px] bg-nexus-deep border border-nexus-teal/30 text-nexus-teal px-2 py-1 rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all"
+            className={`flex items-center gap-1 ${
+              isFullPage ? "text-xs px-3 py-2" : "text-[10px] px-2 py-1"
+            } bg-nexus-deep border border-nexus-teal/30 text-nexus-teal rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all`}
             title="Save to Data Vault"
           >
-            <CloudUpload size={12} /> Save to Vault
+            <CloudUpload size={isFullPage ? 14 : 12} /> Save to Vault
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-1 text-[10px] bg-nexus-deep border border-nexus-teal/30 text-nexus-teal px-2 py-1 rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all"
+            className={`flex items-center gap-1 ${
+              isFullPage ? "text-xs px-3 py-2" : "text-[10px] px-2 py-1"
+            } bg-nexus-deep border border-nexus-teal/30 text-nexus-teal rounded hover:bg-nexus-teal hover:text-nexus-deep transition-all`}
           >
-            <Download size={12} /> PDF
+            <Download size={isFullPage ? 14 : 12} /> PDF
           </button>
         </div>
       </div>
@@ -1302,21 +1458,55 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
       {/* Editor Area */}
       {editorMode === "docs" ? (
         // Original Quill Editor
-        <div className="flex-1 bg-black/10 rounded-xl overflow-hidden flex flex-col [&_*]:outline-none [&_*]:ring-0">
-          <ReactQuill
-            theme="snow"
-            value={content}
-            onChange={setContent}
-            modules={{
-              toolbar: [
-                [{ header: [1, 2, false] }],
-                ["bold", "italic", "code-block"],
-                [{ list: "ordered" }, { list: "bullet" }],
-              ],
-            }}
-            className="h-full flex flex-col border-none outline-none"
-          />
-        </div>
+        <>
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              .notes-editor-wrapper {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+              }
+              .notes-editor-wrapper .quill {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+              }
+              .notes-editor-wrapper .ql-toolbar {
+                border: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                background: rgba(0, 0, 0, 0.2);
+                flex-shrink: 0;
+              }
+              .notes-editor-wrapper .ql-container {
+                flex: 1;
+                border: none;
+                font-size: 14px;
+                overflow-y: auto;
+              }
+              .notes-editor-wrapper .ql-editor {
+                color: rgb(226, 232, 240);
+              }
+              .notes-editor-wrapper .ql-editor.ql-blank::before {
+                color: rgba(226, 232, 240, 0.5);
+              }
+            `
+          }} />
+          <div className="flex-1 bg-black/10 rounded-xl overflow-hidden notes-editor-wrapper">
+            <ReactQuill
+              theme="snow"
+              value={content}
+              onChange={setContent}
+              modules={{
+                toolbar: [
+                  [{ header: [1, 2, false] }],
+                  ["bold", "italic", "code-block"],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                ],
+              }}
+            />
+          </div>
+        </>
       ) : (
         // Markdown Split-Pane Editor
         <div className="flex-1 bg-black/10 rounded-xl overflow-hidden flex">
@@ -1325,11 +1515,11 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
             <div
               className={`${
                 viewMode === "split" ? "w-1/2" : "w-full"
-              } flex flex-col h-full ${
+              } flex flex-col ${
                 viewMode === "split" ? "border-r border-white/10" : ""
               }`}
             >
-              <div className="px-3 py-2 bg-black/20 border-b border-white/5 flex items-center gap-2">
+              <div className="px-3 py-2 bg-black/20 border-b border-white/5 flex items-center gap-2 shrink-0">
                 <Pen size={12} className="text-text-secondary" />
                 <span className="text-[10px] font-mono text-text-secondary uppercase tracking-wider">
                   Editor
@@ -1351,9 +1541,9 @@ const Notes = ({ searchQuery = "", content, setContent, markdownContent, setMark
             <div
               className={`${
                 viewMode === "split" ? "w-1/2" : "w-full"
-              } flex flex-col h-full overflow-hidden`}
+              } flex flex-col overflow-hidden`}
             >
-              <div className="px-3 py-2 bg-black/20 border-b border-white/5 flex items-center gap-2">
+              <div className="px-3 py-2 bg-black/20 border-b border-white/5 flex items-center gap-2 shrink-0">
                 <Eye size={12} className="text-text-secondary" />
                 <span className="text-[10px] font-mono text-text-secondary uppercase tracking-wider">
                   Preview

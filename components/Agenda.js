@@ -15,7 +15,7 @@ const Agenda = ({
   events = [],
   setEvents,
   isFullPage = false,
-  user
+  user,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -115,18 +115,26 @@ const Agenda = ({
     }
 
     if (user) {
-        supabase.from("calendar_events").insert({
-            user_id: user.id,
-            title: newEvent.title,
-            start_time: newEvent.startTime.toISOString(),
-            end_time: newEvent.endTime.toISOString(), // Assuming 1 hour duration logic from above
-            type: newEvent.type,
-            description: newEvent.description
-        }).select().then(({ data }) => {
-            if (data && data[0] && setEvents) {
-               // Update ID
-               setEvents(prev => prev.map(e => e.id === newEvent.id ? {...e, id: data[0].id} : e));
-            }
+      supabase
+        .from("calendar_events")
+        .insert({
+          user_id: user.id,
+          title: newEvent.title,
+          start_time: newEvent.startTime.toISOString(),
+          end_time: newEvent.endTime.toISOString(), // Assuming 1 hour duration logic from above
+          type: newEvent.type,
+          description: newEvent.description,
+        })
+        .select()
+        .then(({ data }) => {
+          if (data && data[0] && setEvents) {
+            // Update ID
+            setEvents((prev) =>
+              prev.map((e) =>
+                e.id === newEvent.id ? { ...e, id: data[0].id } : e
+              )
+            );
+          }
         });
     }
 
@@ -320,19 +328,19 @@ const Agenda = ({
             exit={{ opacity: 0, y: -20 }}
             className={
               isFullPage
-                ? "absolute inset-x-0 top-0 z-50 bg-nexus-deep/95 backdrop-blur-xl border border-white/10 shadow-2xl p-6 rounded-3xl max-h-full overflow-y-auto custom-scrollbar"
+                ? "absolute inset-x-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl bg-nexus-deep/95 backdrop-blur-xl border border-white/10 shadow-2xl p-8 rounded-3xl"
                 : "absolute inset-0 z-50 bg-nexus-deep/95 backdrop-blur-xl flex flex-col p-4 rounded-3xl"
             }
           >
-            <div
-              className={
-                isFullPage
-                  ? "w-full max-w-3xl mx-auto flex flex-col"
-                  : "contents"
-              }
-            >
+            <div className={isFullPage ? "w-full flex flex-col" : "contents"}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">New Event</h3>
+                <h3
+                  className={`${
+                    isFullPage ? "text-xl" : "text-lg"
+                  } font-bold text-white`}
+                >
+                  New Event
+                </h3>
                 <button
                   onClick={() => setIsAddingEvent(false)}
                   className="p-1 hover:bg-white/10 rounded-full text-text-secondary hover:text-white transition-colors"
@@ -349,14 +357,20 @@ const Agenda = ({
                 }`}
               >
                 <div>
-                  <label className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1 block">
+                  <label
+                    className={`${
+                      isFullPage ? "text-xs" : "text-[10px]"
+                    } uppercase tracking-wider text-text-secondary font-bold mb-1 block`}
+                  >
                     Title
                   </label>
                   <input
                     ref={titleInputRef}
                     type="text"
                     placeholder="Event Title"
-                    className="w-full bg-input-bg border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors"
+                    className={`w-full bg-input-bg border border-white/10 rounded-xl ${
+                      isFullPage ? "px-4 py-3 text-base" : "px-3 py-2 text-sm"
+                    } text-white focus:outline-none focus:border-nexus-purple transition-colors`}
                     value={newEventTitle}
                     onChange={(e) => setNewEventTitle(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -366,13 +380,21 @@ const Agenda = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1 block">
+                    <label
+                      className={`${
+                        isFullPage ? "text-xs" : "text-[10px]"
+                      } uppercase tracking-wider text-text-secondary font-bold mb-1 block`}
+                    >
                       Time
                     </label>
                     <div className="relative">
                       <input
                         type="time"
-                        className="w-full bg-input-bg border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors appearance-none"
+                        className={`w-full bg-input-bg border border-white/10 rounded-xl ${
+                          isFullPage
+                            ? "px-4 py-3 text-base"
+                            : "px-3 py-2 text-sm"
+                        } text-white focus:outline-none focus:border-nexus-purple transition-colors appearance-none`}
                         value={newEventTime}
                         onChange={(e) => setNewEventTime(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -384,11 +406,17 @@ const Agenda = ({
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1 block">
+                    <label
+                      className={`${
+                        isFullPage ? "text-xs" : "text-[10px]"
+                      } uppercase tracking-wider text-text-secondary font-bold mb-1 block`}
+                    >
                       Type
                     </label>
                     <select
-                      className="w-full bg-input-bg border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors appearance-none"
+                      className={`w-full bg-input-bg border border-white/10 rounded-xl ${
+                        isFullPage ? "px-4 py-3 text-base" : "px-3 py-2 text-sm"
+                      } text-white focus:outline-none focus:border-nexus-purple transition-colors appearance-none`}
                       value={newEventType}
                       onChange={(e) => setNewEventType(e.target.value)}
                       onKeyDown={handleKeyDown}
@@ -416,12 +444,20 @@ const Agenda = ({
                 </div>
 
                 <div>
-                  <label className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-1 block">
+                  <label
+                    className={`${
+                      isFullPage ? "text-xs" : "text-[10px]"
+                    } uppercase tracking-wider text-text-secondary font-bold mb-1 block`}
+                  >
                     Description (Optional)
                   </label>
                   <textarea
                     placeholder="Add details..."
-                    className="w-full bg-input-bg border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors resize-none h-20"
+                    className={`w-full bg-input-bg border border-white/10 rounded-xl ${
+                      isFullPage
+                        ? "px-4 py-3 text-base h-32"
+                        : "px-3 py-2 text-sm h-20"
+                    } text-white focus:outline-none focus:border-nexus-purple transition-colors resize-none`}
                     value={newEventDescription}
                     onChange={(e) => setNewEventDescription(e.target.value)}
                     onKeyDown={(e) => {
@@ -431,7 +467,11 @@ const Agenda = ({
                       }
                     }}
                   />
-                  <p className="text-[10px] text-text-secondary mt-1 text-right">
+                  <p
+                    className={`${
+                      isFullPage ? "text-xs" : "text-[10px]"
+                    } text-text-secondary mt-1 text-right`}
+                  >
                     Shift + Enter for new line
                   </p>
                 </div>
@@ -439,7 +479,9 @@ const Agenda = ({
                 <div className="pt-2 pb-1">
                   <button
                     onClick={handleAddEvent}
-                    className="w-full bg-nexus-purple hover:bg-nexus-purple/80 text-white font-bold py-2 rounded-xl transition-colors shadow-lg shadow-nexus-purple/20 text-sm"
+                    className={`w-full bg-nexus-purple hover:bg-nexus-purple/80 text-white font-bold ${
+                      isFullPage ? "py-3 text-base" : "py-2 text-sm"
+                    } rounded-xl transition-colors shadow-lg shadow-nexus-purple/20`}
                   >
                     Create Event
                   </button>

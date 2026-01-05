@@ -17,6 +17,7 @@ import {
   Trash2,
   X,
   Menu,
+  BrainCircuit,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -150,7 +151,12 @@ const CodeBlock = ({ inline, className, children, ...props }) => {
   );
 };
 
-const AIChat = ({ user, showHeader = false, isCompact = false }) => {
+const AIChat = ({
+  user,
+  showHeader = false,
+  isCompact = false,
+  isFullPage = false,
+}) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -184,64 +190,70 @@ const AIChat = ({ user, showHeader = false, isCompact = false }) => {
 
   // Fetch Conversations List
   const fetchConversations = async () => {
-     if (!user) return;
-     const { data, error } = await supabase
-        .from("chat_conversations")
-        .select("*")
-        .order("updated_at", { ascending: false });
-        
-     if (!error && data) {
-         setConversations(data);
-         // If no current conversation, maybe select the most recent one? 
-         // For now, let's keep it empty (New Chat state) unless specified.
-     }
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("chat_conversations")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (!error && data) {
+      setConversations(data);
+      // If no current conversation, maybe select the most recent one?
+      // For now, let's keep it empty (New Chat state) unless specified.
+    }
   };
 
   useEffect(() => {
-     fetchConversations();
+    fetchConversations();
   }, [user]);
 
   // Load Messages for Specific Conversation
   const loadConversation = async (id) => {
-      setCurrentConversationId(id);
-      setIsSidebarOpen(false); // Close sidebar on selection on mobile
-      
-      const { data, error } = await supabase
-        .from("chat_history")
-        .select("*")
-        .eq("conversation_id", id)
-        .order("created_at", { ascending: true });
+    setCurrentConversationId(id);
+    setIsSidebarOpen(false); // Close sidebar on selection on mobile
 
-      if (!error && data) {
-          setMessages(data.map(m => ({
-            id: m.id,
-            role: m.role,
-            text: m.text,
-            timestamp: new Date(m.created_at)
-        })));
-      }
+    const { data, error } = await supabase
+      .from("chat_history")
+      .select("*")
+      .eq("conversation_id", id)
+      .order("created_at", { ascending: true });
+
+    if (!error && data) {
+      setMessages(
+        data.map((m) => ({
+          id: m.id,
+          role: m.role,
+          text: m.text,
+          timestamp: new Date(m.created_at),
+        }))
+      );
+    }
   };
-  
+
   const handleNewChat = () => {
-      setCurrentConversationId(null);
-      setMessages([]);
-      setIsSidebarOpen(false);
+    setCurrentConversationId(null);
+    setMessages([]);
+    setIsSidebarOpen(false);
   };
 
   const handleDeleteConversation = async (e, id) => {
-      e.stopPropagation();
-      if(!confirm("Delete this conversation?")) return;
-      
-      const { error } = await supabase.from("chat_conversations").delete().eq("id", id);
-      if (!error) {
-          setConversations(prev => prev.filter(c => c.id !== id));
-          if (currentConversationId === id) handleNewChat();
-      }
+    e.stopPropagation();
+    if (!confirm("Delete this conversation?")) return;
+
+    const { error } = await supabase
+      .from("chat_conversations")
+      .delete()
+      .eq("id", id);
+    if (!error) {
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      if (currentConversationId === id) handleNewChat();
+    }
   };
 
   // Filtered History
-  const filteredConversations = conversations.filter(c => 
-      c.title?.toLowerCase().includes(historySearch.toLowerCase()) || 
+  const filteredConversations = conversations.filter(
+    (c) =>
+      c.title?.toLowerCase().includes(historySearch.toLowerCase()) ||
       "New Conversation".toLowerCase().includes(historySearch.toLowerCase())
   );
 
@@ -263,69 +275,80 @@ const AIChat = ({ user, showHeader = false, isCompact = false }) => {
     let activeConvId = currentConversationId;
 
     try {
-        // 1. Create Conversation if not exists
-        if (!activeConvId && user) {
-            // Generate title from first message
-            const title = userText.length > 30 ? userText.substring(0,30) + "..." : userText;
-            
-            const { data: convData, error: convError } = await supabase
-                .from("chat_conversations")
-                .insert({ user_id: user.id, title: title })
-                .select()
-                .single();
-                
-            if (!convError && convData) {
-                activeConvId = convData.id;
-                setCurrentConversationId(activeConvId);
-                fetchConversations(); // Refresh list
-            }
-        } else if (activeConvId && user) {
-            // Update timestamp
-            supabase.from("chat_conversations")
-                .update({ updated_at: new Date() })
-                .eq("id", activeConvId).then(() => fetchConversations());
+      // 1. Create Conversation if not exists
+      if (!activeConvId && user) {
+        // Generate title from first message
+        const title =
+          userText.length > 30 ? userText.substring(0, 30) + "..." : userText;
+
+        const { data: convData, error: convError } = await supabase
+          .from("chat_conversations")
+          .insert({ user_id: user.id, title: title })
+          .select()
+          .single();
+
+        if (!convError && convData) {
+          activeConvId = convData.id;
+          setCurrentConversationId(activeConvId);
+          fetchConversations(); // Refresh list
         }
+      } else if (activeConvId && user) {
+        // Update timestamp
+        supabase
+          .from("chat_conversations")
+          .update({ updated_at: new Date() })
+          .eq("id", activeConvId)
+          .then(() => fetchConversations());
+      }
 
-        // 2. Save User Msg
-        if (user && activeConvId) {
-            supabase.from("chat_history").insert({
-                user_id: user.id,
-                conversation_id: activeConvId,
-                role: "user",
-                text: userText
-            }).then();
-        }
+      // 2. Save User Msg
+      if (user && activeConvId) {
+        supabase
+          .from("chat_history")
+          .insert({
+            user_id: user.id,
+            conversation_id: activeConvId,
+            role: "user",
+            text: userText,
+          })
+          .then();
+      }
 
-        const history = messages.map((m) => ({ role: m.role, text: m.text }));
-        
-        // Use Gemini
-        const responseText = await generateAIResponse(userText, history);
+      const history = messages.map((m) => ({ role: m.role, text: m.text }));
 
-        const aiMsg = {
-            id: (Date.now() + 1).toString(),
+      // Use Gemini
+      const responseText = await generateAIResponse(userText, history);
+
+      const aiMsg = {
+        id: (Date.now() + 1).toString(),
+        role: "model",
+        text: responseText,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+
+      // 3. Save AI Msg
+      if (user && activeConvId) {
+        supabase
+          .from("chat_history")
+          .insert({
+            user_id: user.id,
+            conversation_id: activeConvId,
             role: "model",
             text: responseText,
-            timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, aiMsg]);
-      
-        // 3. Save AI Msg
-        if (user && activeConvId) {
-            supabase.from("chat_history").insert({
-                user_id: user.id,
-                conversation_id: activeConvId,
-                role: "model",
-                text: responseText
-            }).then();
-        }
-      
+          })
+          .then();
+      }
     } catch (e) {
       console.error(e);
-      setMessages(prev => [...prev, {
-          id: Date.now(), 
-          role: "model", 
-          text: "Error: Could not reach AI service."
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: "model",
+          text: "Error: Could not reach AI service.",
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -334,344 +357,418 @@ const AIChat = ({ user, showHeader = false, isCompact = false }) => {
   return (
     <div className="flex h-full relative overflow-hidden">
       {/* Sidebar (History) */}
-      <div 
+      <div
         className={`absolute inset-y-0 left-0 z-30 w-72 bg-nexus-deep/95 backdrop-blur-xl border-r border-white/10 transform transition-transform duration-300 flex flex-col shadow-2xl ${
           showHistory ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/5">
-            <h3 className="font-bold text-white text-sm tracking-wider flex items-center gap-2">
-                <Clock size={16} className="text-nexus-purple" />
-                HISTORY
-            </h3>
-            <button 
-                onClick={() => setShowHistory(false)} 
-                className="text-text-secondary hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg"
-            >
-                <X size={18} />
-            </button>
+          <h3 className="font-bold text-white text-sm tracking-wider flex items-center gap-2">
+            <Clock size={16} className="text-nexus-purple" />
+            HISTORY
+          </h3>
+          <button
+            onClick={() => setShowHistory(false)}
+            className="text-text-secondary hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg"
+          >
+            <X size={18} />
+          </button>
         </div>
-        
+
         <div className="p-4">
-            <div className="relative group">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-nexus-teal transition-colors" />
-                <input 
-                    type="text" 
-                    placeholder="Search conversations..." 
-                    value={historySearch}
-                    onChange={(e) => setHistorySearch(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-nexus-teal focus:ring-1 focus:ring-nexus-teal/50 transition-all placeholder:text-text-secondary/50"
-                />
-            </div>
+          <div className="relative group">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-nexus-teal transition-colors"
+            />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={historySearch}
+              onChange={(e) => setHistorySearch(e.target.value)}
+              className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-nexus-teal focus:ring-1 focus:ring-nexus-teal/50 transition-all placeholder:text-text-secondary/50"
+            />
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
-            <div className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-2 mb-2 opacity-70">
-                Recent Chats
-            </div>
-            {filteredConversations.map(conv => (
-                <button
-                    key={conv.id}
-                    onClick={() => loadConversation(conv.id)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all group border ${
-                        currentConversationId === conv.id 
-                            ? "bg-nexus-purple/10 border-nexus-purple/40 shadow-[0_0_15px_rgba(147,51,234,0.1)]" 
-                            : "hover:bg-white/5 border-transparent hover:border-white/5"
-                    }`}
+          <div className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-2 mb-2 opacity-70">
+            Recent Chats
+          </div>
+          {filteredConversations.map((conv) => (
+            <button
+              key={conv.id}
+              onClick={() => loadConversation(conv.id)}
+              className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all group border ${
+                currentConversationId === conv.id
+                  ? "bg-nexus-purple/10 border-nexus-purple/40 shadow-[0_0_15px_rgba(147,51,234,0.1)]"
+                  : "hover:bg-white/5 border-transparent hover:border-white/5"
+              }`}
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div
+                  className={`p-1.5 rounded-lg ${
+                    currentConversationId === conv.id
+                      ? "bg-nexus-purple/20 text-nexus-purple"
+                      : "bg-white/5 text-text-secondary group-hover:text-white"
+                  }`}
                 >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={`p-1.5 rounded-lg ${currentConversationId === conv.id ? "bg-nexus-purple/20 text-nexus-purple" : "bg-white/5 text-text-secondary group-hover:text-white"}`}>
-                            <MessageSquare size={14} />
-                        </div>
-                        <div className="flex flex-col overflow-hidden">
-                            <span className={`text-xs truncate font-medium ${currentConversationId === conv.id ? "text-white" : "text-text-secondary group-hover:text-white"}`}>
-                                {conv.title || "New Conversation"}
-                            </span>
-                            <span className="text-[10px] text-text-secondary/50 truncate">
-                                {new Date(conv.updated_at).toLocaleDateString()}
-                            </span>
-                        </div>
-                    </div>
-                    <div 
-                        onClick={(e) => handleDeleteConversation(e, conv.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-all"
-                        title="Delete"
-                    >
-                        <Trash2 size={12} />
-                    </div>
-                </button>
-            ))}
-            
-            {filteredConversations.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-10 text-text-secondary opacity-50 gap-2">
-                    <MessageSquare size={24} />
-                    <span className="text-xs">No conversations found</span>
+                  <MessageSquare size={14} />
                 </div>
-            )}
+                <div className="flex flex-col overflow-hidden">
+                  <span
+                    className={`text-xs truncate font-medium ${
+                      currentConversationId === conv.id
+                        ? "text-white"
+                        : "text-text-secondary group-hover:text-white"
+                    }`}
+                  >
+                    {conv.title || "New Conversation"}
+                  </span>
+                  <span className="text-[10px] text-text-secondary/50 truncate">
+                    {new Date(conv.updated_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <div
+                onClick={(e) => handleDeleteConversation(e, conv.id)}
+                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-all"
+                title="Delete"
+              >
+                <Trash2 size={12} />
+              </div>
+            </button>
+          ))}
+
+          {filteredConversations.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 text-text-secondary opacity-50 gap-2">
+              <MessageSquare size={24} />
+              <span className="text-xs">No conversations found</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full w-full relative">
         {showHeader && (
-            <div className={`flex items-center justify-between ${isCompact ? "p-3 pb-1" : "p-5 pb-2"} z-10`}>
-                <div className="flex items-center gap-3">
-                    <div className={`relative w-8 h-8 ${isCompact ? "scale-75" : ""}`}>
-                      <Image
-                        src="/assets/ai-mascot.png"
-                        alt="A.C.E Mascot"
-                        fill
-                        className="object-contain"
-                      />
-                    </div>
-                    <h3 className={`${isCompact ? "text-sm" : "text-lg"} font-semibold tracking-wide text-text-primary font-sans`}>
-                        A.C.E
-                    </h3>
+          <div
+            className={`flex items-center justify-between ${
+              isCompact ? "p-3 pb-1" : isFullPage ? "pb-4" : "p-5 pb-2"
+            } z-10`}
+          >
+            <div className="flex items-center gap-3">
+              {!isFullPage && (
+                <div
+                  className={`relative w-8 h-8 ${isCompact ? "scale-75" : ""}`}
+                >
+                  <Image
+                    src="/assets/ai-mascot.png"
+                    alt="A.C.E Mascot"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
-                <div className="flex items-center gap-1">
-                     <button
-                       onClick={() => setShowHistory(!showHistory)}
-                       className={`p-2 rounded-lg transition-all flex items-center justify-center ${
-                           showHistory 
-                           ? "text-nexus-purple bg-nexus-purple/10" 
-                           : "text-text-secondary hover:text-white hover:bg-white/5"
-                       }`}
-                       title="History"
-                     >
-                       <Clock size={18} />
-                     </button>
-                     <button
-                       onClick={handleNewChat}
-                       className="p-2 text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-all flex items-center justify-center"
-                       title="New Chat"
-                     >
-                       <Plus size={18} />
-                     </button>
-                </div>
+              )}
+              <h3
+                className={`${
+                  isCompact ? "text-sm" : isFullPage ? "text-xl" : "text-lg"
+                } font-semibold tracking-wide text-text-primary font-sans flex items-center gap-2`}
+              >
+                {isFullPage && <BrainCircuit className="text-nexus-teal" />}
+                {isFullPage ? "Nexus AI Core - Full Interface" : "A.C.E"}
+              </h3>
             </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className={`p-2 rounded-lg transition-all flex items-center justify-center ${
+                  showHistory
+                    ? "text-nexus-purple bg-nexus-purple/10"
+                    : "text-text-secondary hover:text-white hover:bg-white/5"
+                }`}
+                title="History"
+              >
+                <Clock size={18} />
+              </button>
+              <button
+                onClick={handleNewChat}
+                className="p-2 text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-all flex items-center justify-center"
+                title="New Chat"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Header Actions - Positioned Top Right if Header is Hidden */}
         {!showHeader && (
-        <div className="absolute -top-1 -right-1 z-20 flex items-center gap-1">
-             <button
-               onClick={() => setShowHistory(!showHistory)}
-               className={`p-2 rounded-lg transition-all flex items-center justify-center ${
-                   showHistory 
-                   ? "text-nexus-purple bg-nexus-purple/10" 
-                   : "text-text-secondary hover:text-white hover:bg-white/5"
-               }`}
-               title="History"
-             >
-               <Clock size={18} />
-             </button>
-             <button
-               onClick={handleNewChat}
-               className="p-2 text-text-secondary hover:text-nexus-teal hover:bg-nexus-teal/10 rounded-lg transition-all flex items-center justify-center"
-               title="New Chat"
-             >
-               <Plus size={18} />
-             </button>
-        </div>
+          <div className="absolute -top-1 -right-1 z-20 flex items-center gap-1">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className={`p-2 rounded-lg transition-all flex items-center justify-center ${
+                showHistory
+                  ? "text-nexus-purple bg-nexus-purple/10"
+                  : "text-text-secondary hover:text-white hover:bg-white/5"
+              }`}
+              title="History"
+            >
+              <Clock size={18} />
+            </button>
+            <button
+              onClick={handleNewChat}
+              className="p-2 text-text-secondary hover:text-nexus-teal hover:bg-nexus-teal/10 rounded-lg transition-all flex items-center justify-center"
+              title="New Chat"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         )}
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-2 pb-4 pt-4">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
-            <div className="relative w-14 h-14">
-              <Image
-                src="/assets/ai-mascot.png"
-                alt="A.C.E Mascot"
-                fill
-                className="object-contain drop-shadow-[0_0_15px_rgba(115,42,223,0.5)]"
-              />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-text-primary mb-1">
-                A.C.E Online
-              </h3>
-              <p className="text-xs text-text-secondary max-w-[200px] mx-auto">
-                System ready. Awaiting the input for processing.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 w-full max-w-xs">
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSend(s.text)}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-input-bg hover:bg-card-bg border border-card-border hover:border-nexus-purple/30 transition-all text-xs text-text-secondary hover:text-text-primary text-left group"
-                >
-                  <div className="p-1.5 rounded-lg bg-nexus-deep text-nexus-purple group-hover:text-nexus-teal transition-colors">
-                    {s.icon}
-                  </div>
-                  {s.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <>
-            {messages.map((msg) => (
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
               <div
-                key={msg.id}
-                className={`flex ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
+                className={`relative ${isFullPage ? "w-20 h-20" : "w-14 h-14"}`}
+              >
+                <Image
+                  src="/assets/ai-mascot.png"
+                  alt="A.C.E Mascot"
+                  fill
+                  className="object-contain drop-shadow-[0_0_15px_rgba(115,42,223,0.5)]"
+                />
+              </div>
+              <div>
+                <h3
+                  className={`${
+                    isFullPage ? "text-2xl" : "text-xl"
+                  } font-bold text-text-primary mb-1`}
+                >
+                  A.C.E Online
+                </h3>
+                <p
+                  className={`${
+                    isFullPage ? "text-sm max-w-md" : "text-xs max-w-[200px]"
+                  } text-text-secondary mx-auto`}
+                >
+                  System ready. Awaiting the input for processing.
+                </p>
+              </div>
+              <div
+                className={`flex flex-col gap-2 w-full ${
+                  isFullPage ? "max-w-2xl" : "max-w-xs"
                 }`}
               >
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSend(s.text)}
+                    className={`flex items-center gap-3 ${
+                      isFullPage ? "p-4" : "p-3"
+                    } rounded-xl bg-input-bg hover:bg-card-bg border border-card-border hover:border-nexus-purple/30 transition-all ${
+                      isFullPage ? "text-sm" : "text-xs"
+                    } text-text-secondary hover:text-text-primary text-left group`}
+                  >
+                    <div
+                      className={`${
+                        isFullPage ? "p-2" : "p-1.5"
+                      } rounded-lg bg-nexus-deep text-nexus-purple group-hover:text-nexus-teal transition-colors`}
+                    >
+                      {React.cloneElement(s.icon, {
+                        size: isFullPage ? 18 : 14,
+                      })}
+                    </div>
+                    {s.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {messages.map((msg) => (
                 <div
-                  className={`
-                max-w-[85%] p-3 rounded-2xl text-sm font-mono
+                  key={msg.id}
+                  className={`flex ${
+                    msg.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`
+                ${isFullPage ? "max-w-[75%]" : "max-w-[85%]"} ${
+                      isFullPage ? "p-4" : "p-3"
+                    } rounded-2xl ${
+                      isFullPage ? "text-base" : "text-sm"
+                    } font-mono
                 ${
                   msg.role === "user"
                     ? "bg-nexus-purple text-white rounded-br-none"
                     : "bg-input-bg border border-card-border text-text-primary rounded-bl-none"
                 }
               `}
-                >
-                  <div className="flex items-center gap-2 mb-1 opacity-50 text-xs">
-                    {msg.role === "model" ? (
-                      <Bot size={12} />
-                    ) : (
-                      <User size={12} />
-                    )}
-                    <span>{msg.role === "model" ? "A.C.E" : "You"}</span>
-                  </div>
-                  <div className="markdown-content">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        h1: ({ node, ...props }) => (
-                          <h1
-                            className="text-lg font-bold text-white mt-6 mb-3 pb-2 border-b border-white/10"
-                            {...props}
-                          />
-                        ),
-                        h2: ({ node, ...props }) => (
-                          <h2
-                            className="text-base font-bold text-nexus-teal mt-5 mb-2"
-                            {...props}
-                          />
-                        ),
-                        h3: ({ node, ...props }) => (
-                          <h3
-                            className="text-sm font-bold text-text-primary mt-4 mb-2"
-                            {...props}
-                          />
-                        ),
-                        p: ({ node, ...props }) => (
-                          <p className="mb-3 leading-7 last:mb-0" {...props} />
-                        ),
-                        ul: ({ node, ...props }) => (
-                          <ul
-                            className="list-disc list-outside mb-4 space-y-2 pl-5 marker:text-nexus-purple [&_ul]:list-[circle] [&_ul_ul]:list-[square]"
-                            {...props}
-                          />
-                        ),
-                        ol: ({ node, ...props }) => (
-                          <ol
-                            className="list-decimal list-outside mb-4 space-y-2 pl-5 marker:text-nexus-teal [&_ol]:list-[lower-alpha] [&_ol_ol]:list-[lower-roman]"
-                            {...props}
-                          />
-                        ),
-                        li: ({ node, ...props }) => (
-                          <li
-                            className="text-text-primary pl-1 leading-relaxed"
-                            {...props}
-                          />
-                        ),
-                        blockquote: ({ node, ...props }) => (
-                          <blockquote className="border-l-4 border-nexus-purple bg-white/5 p-4 my-4 rounded-r-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-2 opacity-10">
-                              <Quote size={40} className="fill-nexus-purple" />
-                            </div>
-                            <div className="relative z-10 flex gap-3">
-                              <Quote
-                                size={20}
-                                className="text-nexus-purple shrink-0 mt-1 fill-nexus-purple"
-                              />
-                              <div
-                                className="italic text-text-secondary text-sm leading-relaxed"
-                                {...props}
-                              />
-                            </div>
-                          </blockquote>
-                        ),
-                        hr: ({ node, ...props }) => (
-                          <div className="my-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent border-none" />
-                        ),
-                        strong: ({ node, ...props }) => (
-                          <strong
-                            className="font-bold text-nexus-teal"
-                            {...props}
-                          />
-                        ),
-                        em: ({ node, ...props }) => (
-                          <em
-                            className="italic text-text-secondary"
-                            {...props}
-                          />
-                        ),
-                        a: ({ node, ...props }) => (
-                          <a
-                            className="text-nexus-teal underline hover:text-text-primary transition-colors"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            {...props}
-                          />
-                        ),
-                        code: ({
-                          node,
-                          inline,
-                          className,
-                          children,
-                          ...props
-                        }) => (
-                          <CodeBlock
-                            inline={inline}
-                            className={className}
-                            {...props}
-                          >
-                            {children}
-                          </CodeBlock>
-                        ),
-                      }}
+                  >
+                    <div
+                      className={`flex items-center gap-2 ${
+                        isFullPage ? "mb-2" : "mb-1"
+                      } opacity-50 ${isFullPage ? "text-sm" : "text-xs"}`}
                     >
-                      {preprocessMarkdown(msg.text)}
-                    </ReactMarkdown>
+                      {msg.role === "model" ? (
+                        <Bot size={isFullPage ? 14 : 12} />
+                      ) : (
+                        <User size={isFullPage ? 14 : 12} />
+                      )}
+                      <span>{msg.role === "model" ? "A.C.E" : "You"}</span>
+                    </div>
+                    <div className="markdown-content">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ node, ...props }) => (
+                            <h1
+                              className="text-lg font-bold text-white mt-6 mb-3 pb-2 border-b border-white/10"
+                              {...props}
+                            />
+                          ),
+                          h2: ({ node, ...props }) => (
+                            <h2
+                              className="text-base font-bold text-nexus-teal mt-5 mb-2"
+                              {...props}
+                            />
+                          ),
+                          h3: ({ node, ...props }) => (
+                            <h3
+                              className="text-sm font-bold text-text-primary mt-4 mb-2"
+                              {...props}
+                            />
+                          ),
+                          p: ({ node, ...props }) => (
+                            <p
+                              className="mb-3 leading-7 last:mb-0"
+                              {...props}
+                            />
+                          ),
+                          ul: ({ node, ...props }) => (
+                            <ul
+                              className="list-disc list-outside mb-4 space-y-2 pl-5 marker:text-nexus-purple [&_ul]:list-[circle] [&_ul_ul]:list-[square]"
+                              {...props}
+                            />
+                          ),
+                          ol: ({ node, ...props }) => (
+                            <ol
+                              className="list-decimal list-outside mb-4 space-y-2 pl-5 marker:text-nexus-teal [&_ol]:list-[lower-alpha] [&_ol_ol]:list-[lower-roman]"
+                              {...props}
+                            />
+                          ),
+                          li: ({ node, ...props }) => (
+                            <li
+                              className="text-text-primary pl-1 leading-relaxed"
+                              {...props}
+                            />
+                          ),
+                          blockquote: ({ node, ...props }) => (
+                            <blockquote className="border-l-4 border-nexus-purple bg-white/5 p-4 my-4 rounded-r-xl relative overflow-hidden">
+                              <div className="absolute top-0 right-0 p-2 opacity-10">
+                                <Quote
+                                  size={40}
+                                  className="fill-nexus-purple"
+                                />
+                              </div>
+                              <div className="relative z-10 flex gap-3">
+                                <Quote
+                                  size={20}
+                                  className="text-nexus-purple shrink-0 mt-1 fill-nexus-purple"
+                                />
+                                <div
+                                  className="italic text-text-secondary text-sm leading-relaxed"
+                                  {...props}
+                                />
+                              </div>
+                            </blockquote>
+                          ),
+                          hr: ({ node, ...props }) => (
+                            <div className="my-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent border-none" />
+                          ),
+                          strong: ({ node, ...props }) => (
+                            <strong
+                              className="font-bold text-nexus-teal"
+                              {...props}
+                            />
+                          ),
+                          em: ({ node, ...props }) => (
+                            <em
+                              className="italic text-text-secondary"
+                              {...props}
+                            />
+                          ),
+                          a: ({ node, ...props }) => (
+                            <a
+                              className="text-nexus-teal underline hover:text-text-primary transition-colors"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              {...props}
+                            />
+                          ),
+                          code: ({
+                            node,
+                            inline,
+                            className,
+                            children,
+                            ...props
+                          }) => (
+                            <CodeBlock
+                              inline={inline}
+                              className={className}
+                              {...props}
+                            >
+                              {children}
+                            </CodeBlock>
+                          ),
+                        }}
+                      >
+                        {preprocessMarkdown(msg.text)}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start animate-pulse">
-                <div className="bg-nexus-dark/50 border border-white/10 p-3 rounded-2xl rounded-bl-none text-sm text-nexus-teal flex items-center gap-2">
-                  <Sparkles size={14} className="animate-spin" />
-                  <span>Thinking...</span>
+              ))}
+              {loading && (
+                <div className="flex justify-start animate-pulse">
+                  <div className="bg-nexus-dark/50 border border-white/10 p-3 rounded-2xl rounded-bl-none text-sm text-nexus-teal flex items-center gap-2">
+                    <Sparkles size={14} className="animate-spin" />
+                    <span>Thinking...</span>
+                  </div>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+              )}
+            </>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
 
-      <div className={`mt-2 flex gap-2 pl-3 pb-4 pr-3 ${isCompact ? "pb-2" : ""}`}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Ask ACE..."
-          className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono"
-        />
-        <button
-          onClick={() => handleSend()}
-          disabled={loading}
-          className="bg-nexus-teal text-nexus-deep p-3 rounded-xl hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        <div
+          className={`${isFullPage ? "mt-4" : "mt-2"} flex gap-2 pl-3 ${
+            isFullPage ? "pb-6 pr-6" : isCompact ? "pb-2 pr-3" : "pb-4 pr-3"
+          }`}
         >
-          <Send size={18} />
-        </button>
-      </div>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            placeholder="Ask ACE..."
+            className={`flex-1 bg-black/20 border border-white/10 rounded-xl ${
+              isFullPage ? "px-5 py-4 text-base" : "px-4 py-3 text-sm"
+            } text-white focus:outline-none focus:border-nexus-purple transition-colors font-mono`}
+          />
+          <button
+            onClick={() => handleSend()}
+            disabled={loading}
+            className={`bg-nexus-teal text-nexus-deep ${
+              isFullPage ? "p-4" : "p-3"
+            } rounded-xl hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <Send size={isFullPage ? 20 : 18} />
+          </button>
+        </div>
       </div>
     </div>
   );
