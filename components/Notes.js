@@ -1459,8 +1459,9 @@ const Notes = ({
       {editorMode === "docs" ? (
         // Original Quill Editor
         <>
-          <style dangerouslySetInnerHTML={{
-            __html: `
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
               .notes-editor-wrapper {
                 flex: 1;
                 display: flex;
@@ -1490,8 +1491,9 @@ const Notes = ({
               .notes-editor-wrapper .ql-editor.ql-blank::before {
                 color: rgba(226, 232, 240, 0.5);
               }
-            `
-          }} />
+            `,
+            }}
+          />
           <div className="flex-1 bg-black/10 rounded-xl overflow-hidden notes-editor-wrapper">
             <ReactQuill
               theme="snow"
