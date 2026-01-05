@@ -39,6 +39,19 @@ import {
   Link as LinkIcon,
   ArrowLeft,
   Plus,
+  Menu,
+  Home,
+  User,
+  Settings,
+  HelpCircle,
+  Grid3x3,
+  StickyNote,
+  Bell,
+  Clock,
+  CloudRain,
+  Target,
+  BarChart3,
+  Sliders,
 } from "lucide-react";
 import BentoCard from "../components/BentoCard";
 import Agenda from "../components/Agenda";
@@ -99,6 +112,7 @@ const App = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef(null);
   const settingsRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Theme & Customization State
   const [showSettings, setShowSettings] = useState(false);
@@ -189,6 +203,38 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem("nexus_widget_order", JSON.stringify(widgetOrder));
   }, [widgetOrder]);
+
+  // System Monitor Preferences State
+  const [monitorPrefs, setMonitorPrefs] = useState(() => {
+    const defaults = {
+      showWeather: true,
+      showTime: true,
+      showTaskSummary: true,
+      showTaskCarousel: false, // New: Show rotating task deadline carousel
+      taskAlertDays: 7, // Show tasks due within X days
+      urgentThreshold: 3, // Tasks due within X days are marked urgent
+      layout: "default", // default, compact, detailed
+    };
+
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nexus_monitor_prefs");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // Merge with defaults to ensure all properties exist
+          return { ...defaults, ...parsed };
+        } catch (e) {
+          console.error("Failed to parse monitor prefs:", e);
+          return defaults;
+        }
+      }
+    }
+    return defaults;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("nexus_monitor_prefs", JSON.stringify(monitorPrefs));
+  }, [monitorPrefs]);
 
   // DnD Sensors
   const sensors = useSensors(
@@ -519,8 +565,55 @@ const App = () => {
     show: { opacity: 1, y: 0 },
   };
 
+  const navigationItems = [
+    { id: "dashboard", label: "Dashboard", icon: Home, external: false },
+    { id: "calendar", label: "Calendar", icon: Calendar, external: false },
+    { id: "tasks", label: "Tasks", icon: CheckSquare, external: false },
+    { id: "notes", label: "Notes", icon: StickyNote, external: false },
+    { id: "vault", label: "Vault", icon: Database, external: false },
+    { id: "ai", label: "AI Assistant", icon: BrainCircuit, external: false },
+    { id: "monitor", label: "System Monitor", icon: Cpu, external: false },
+    {
+      id: "account",
+      label: "Account",
+      icon: User,
+      external: true,
+      path: "/account",
+    },
+    {
+      id: "preferences",
+      label: "Preferences",
+      icon: Settings,
+      external: true,
+      path: "/preferences",
+    },
+    {
+      id: "integrations",
+      label: "Integrations",
+      icon: Grid3x3,
+      external: true,
+      path: "/integrations",
+    },
+    {
+      id: "help",
+      label: "Help",
+      icon: HelpCircle,
+      external: true,
+      path: "/help",
+    },
+  ];
+
+  const handleNavigation = (item) => {
+    if (item.external) {
+      router.push(item.path);
+    } else {
+      setActiveTab(item.id);
+      setSidebarOpen(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-nexus-deep text-foreground p-4 md:p-8 font-sans selection:bg-nexus-purple selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-nexus-deep text-foreground font-sans selection:bg-nexus-purple selection:text-white relative overflow-x-hidden">
       {/* Background Ambience */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-nexus-purple/20 rounded-full blur-[120px] animate-pulse-slow" />
@@ -530,7 +623,102 @@ const App = () => {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto flex flex-col">
+      {/* Sidebar Navigation */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+
+            {/* Sidebar */}
+            <motion.aside
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 h-full w-72 bg-nexus-deep/95 backdrop-blur-xl border-r border-nexus-glassBorder z-50 overflow-y-auto"
+            >
+              <div className="p-6">
+                {/* Sidebar Header */}
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
+                      <Image
+                        src="/assets/logo.svg"
+                        alt="PACE Logo"
+                        width={40}
+                        height={40}
+                        className="object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-transparent bg-clip-text bg-linear-to-r from-text-primary via-nexus-teal to-nexus-purple">
+                        PACE
+                      </h2>
+                      <p className="text-[8px] text-text-secondary font-mono tracking-wider uppercase">
+                        Navigation
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSidebarOpen(false)}
+                    className="p-2 hover:bg-white/10 rounded-lg text-text-secondary hover:text-white transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Navigation Items */}
+                <nav className="space-y-2">
+                  {navigationItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = !item.external && activeTab === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => handleNavigation(item)}
+                        className={`
+                          w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                          ${
+                            isActive
+                              ? "bg-nexus-purple text-white shadow-lg shadow-nexus-purple/20"
+                              : "text-text-secondary hover:text-white hover:bg-white/5"
+                          }
+                        `}
+                      >
+                        <Icon size={18} />
+                        <span className="text-sm font-medium">
+                          {item.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </nav>
+
+                {/* Logout Button */}
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <button
+                    onClick={logout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all"
+                  >
+                    <ArrowLeft size={18} />
+                    <span className="text-sm font-medium">Logout</span>
+                  </button>
+                </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      <div className="relative z-10 max-w-7xl mx-auto flex flex-col p-4 md:p-8">
         {/* Header / Nav */}
         <motion.header
           variants={containerVariants}
@@ -543,6 +731,14 @@ const App = () => {
             variants={itemVariants}
             className="flex items-center gap-3"
           >
+            {/* Hamburger Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 bg-nexus-glass border border-nexus-glassBorder hover:bg-nexus-purple hover:border-nexus-purple text-text-secondary hover:text-white rounded-xl transition-all shadow-lg mr-2"
+            >
+              <Menu size={20} />
+            </button>
+
             {activeTab !== "dashboard" && (
               <button
                 onClick={() => setActiveTab("dashboard")}
@@ -666,37 +862,11 @@ const App = () => {
             </AnimatePresence>
           </motion.div>
 
-          {/* Right Side: Tabs + User */}
+          {/* Right Side: Settings */}
           <motion.div
             variants={itemVariants}
             className="flex items-center gap-4"
           >
-            <div className="flex items-center gap-2 bg-card-bg border border-card-border rounded-full p-1 backdrop-blur-md">
-              {(() => {
-                const baseTabs = ["dashboard", "calendar", "tasks"];
-                const currentTabs = baseTabs.includes(activeTab)
-                  ? baseTabs
-                  : [...baseTabs, activeTab];
-
-                return currentTabs.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`
-                      px-4 py-2 rounded-full text-xs font-medium transition-all capitalize
-                      ${
-                        activeTab === tab
-                          ? "bg-input-bg text-text-primary shadow-inner"
-                          : "text-text-secondary hover:text-text-primary"
-                      }
-                   `}
-                  >
-                    {tab}
-                  </button>
-                ));
-              })()}
-            </div>
-
             <div className="relative" ref={settingsRef}>
               <button
                 onClick={() => setShowSettings(!showSettings)}
@@ -905,7 +1075,10 @@ const App = () => {
                                     handleResize("monitor", "static", c, r)
                                   }
                                 >
-                                  <SystemMonitor tasks={tasks} />
+                                  <SystemMonitor
+                                    tasks={tasks}
+                                    monitorPrefs={monitorPrefs}
+                                  />
                                 </BentoCard>
                               </SortableItem>
                             );
@@ -1250,6 +1423,365 @@ const App = () => {
                 </h2>
                 <div className="flex-1 overflow-hidden">
                   <AIChat user={user} />
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "monitor" && (
+              <motion.div
+                key="monitor"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.3 }}
+                className="min-h-[80vh]"
+              >
+                <div className="bg-nexus-glass border border-nexus-glassBorder rounded-3xl p-6 backdrop-blur-xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-nexus-purple/20 rounded-xl">
+                      <Cpu className="text-nexus-teal" size={24} />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        System Monitor Settings
+                      </h2>
+                      <p className="text-sm text-text-secondary">
+                        Customize your dashboard monitor card
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Display Options Section */}
+                    <div className="bg-card-bg border border-card-border rounded-2xl p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <BarChart3 size={18} className="text-nexus-teal" />
+                        <h3 className="text-lg font-bold">Display Options</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <label className="flex items-center justify-between p-3 bg-input-bg rounded-xl hover:bg-input-bg/80 transition-colors cursor-pointer group">
+                          <div className="flex items-center gap-3">
+                            <CloudRain
+                              size={16}
+                              className="text-text-secondary group-hover:text-nexus-teal transition-colors"
+                            />
+                            <div>
+                              <div className="text-sm font-medium">
+                                Show Weather
+                              </div>
+                              <div className="text-xs text-text-secondary">
+                                Display current weather information
+                              </div>
+                            </div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={monitorPrefs.showWeather}
+                            onChange={(e) =>
+                              setMonitorPrefs({
+                                ...monitorPrefs,
+                                showWeather: e.target.checked,
+                              })
+                            }
+                            className="w-5 h-5 rounded bg-nexus-deep border-2 border-white/20 checked:bg-nexus-purple checked:border-nexus-purple transition-all cursor-pointer"
+                          />
+                        </label>
+
+                        <label className="flex items-center justify-between p-3 bg-input-bg rounded-xl hover:bg-input-bg/80 transition-colors cursor-pointer group">
+                          <div className="flex items-center gap-3">
+                            <Clock
+                              size={16}
+                              className="text-text-secondary group-hover:text-nexus-teal transition-colors"
+                            />
+                            <div>
+                              <div className="text-sm font-medium">
+                                Show Time
+                              </div>
+                              <div className="text-xs text-text-secondary">
+                                Display current time and date
+                              </div>
+                            </div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={monitorPrefs.showTime}
+                            onChange={(e) =>
+                              setMonitorPrefs({
+                                ...monitorPrefs,
+                                showTime: e.target.checked,
+                              })
+                            }
+                            className="w-5 h-5 rounded bg-nexus-deep border-2 border-white/20 checked:bg-nexus-purple checked:border-nexus-purple transition-all cursor-pointer"
+                          />
+                        </label>
+
+                        <label className="flex items-center justify-between p-3 bg-input-bg rounded-xl hover:bg-input-bg/80 transition-colors cursor-pointer group">
+                          <div className="flex items-center gap-3">
+                            <Target
+                              size={16}
+                              className="text-text-secondary group-hover:text-nexus-teal transition-colors"
+                            />
+                            <div>
+                              <div className="text-sm font-medium">
+                                Show Task Summary
+                              </div>
+                              <div className="text-xs text-text-secondary">
+                                Display upcoming tasks overview
+                              </div>
+                            </div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={monitorPrefs.showTaskSummary}
+                            onChange={(e) =>
+                              setMonitorPrefs({
+                                ...monitorPrefs,
+                                showTaskSummary: e.target.checked,
+                                // Disable carousel when summary is enabled
+                                showTaskCarousel: e.target.checked
+                                  ? false
+                                  : monitorPrefs.showTaskCarousel,
+                              })
+                            }
+                            className="w-5 h-5 rounded bg-nexus-deep border-2 border-white/20 checked:bg-nexus-purple checked:border-nexus-purple transition-all cursor-pointer"
+                          />
+                        </label>
+
+                        <label className="flex items-center justify-between p-3 bg-input-bg rounded-xl hover:bg-input-bg/80 transition-colors cursor-pointer group">
+                          <div className="flex items-center gap-3">
+                            <LayoutGrid
+                              size={16}
+                              className="text-text-secondary group-hover:text-nexus-teal transition-colors"
+                            />
+                            <div>
+                              <div className="text-sm font-medium">
+                                Show Task Carousel
+                              </div>
+                              <div className="text-xs text-text-secondary">
+                                Auto-rotating deadline-based task cards
+                              </div>
+                            </div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={monitorPrefs.showTaskCarousel}
+                            onChange={(e) =>
+                              setMonitorPrefs({
+                                ...monitorPrefs,
+                                showTaskCarousel: e.target.checked,
+                                // Disable summary when carousel is enabled
+                                showTaskSummary: e.target.checked
+                                  ? false
+                                  : monitorPrefs.showTaskSummary,
+                              })
+                            }
+                            className="w-5 h-5 rounded bg-nexus-deep border-2 border-white/20 checked:bg-nexus-purple checked:border-nexus-purple transition-all cursor-pointer"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Task Alert Settings */}
+                    <div className="bg-card-bg border border-card-border rounded-2xl p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Bell size={18} className="text-nexus-teal" />
+                        <h3 className="text-lg font-bold">
+                          Task Alert Settings
+                        </h3>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Show Tasks Due Within
+                          </label>
+                          <div className="grid grid-cols-4 gap-2">
+                            {[3, 7, 14, 30].map((days) => (
+                              <button
+                                key={days}
+                                onClick={() =>
+                                  setMonitorPrefs({
+                                    ...monitorPrefs,
+                                    taskAlertDays: days,
+                                  })
+                                }
+                                className={`
+                                  px-4 py-2 rounded-xl text-sm font-medium transition-all
+                                  ${
+                                    monitorPrefs.taskAlertDays === days
+                                      ? "bg-nexus-purple text-white shadow-lg shadow-nexus-purple/20"
+                                      : "bg-input-bg text-text-secondary hover:bg-input-bg/80 hover:text-text-primary"
+                                  }
+                                `}
+                              >
+                                {days} days
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Urgent Threshold (Mark as Urgent)
+                          </label>
+                          <div className="grid grid-cols-4 gap-2">
+                            {[1, 3, 5, 7].map((days) => (
+                              <button
+                                key={days}
+                                onClick={() =>
+                                  setMonitorPrefs({
+                                    ...monitorPrefs,
+                                    urgentThreshold: days,
+                                  })
+                                }
+                                className={`
+                                  px-4 py-2 rounded-xl text-sm font-medium transition-all
+                                  ${
+                                    monitorPrefs.urgentThreshold === days
+                                      ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+                                      : "bg-input-bg text-text-secondary hover:bg-input-bg/80 hover:text-text-primary"
+                                  }
+                                `}
+                              >
+                                {days} {days === 1 ? "day" : "days"}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-xs text-text-secondary mt-2">
+                            Tasks due within this timeframe will be highlighted
+                            as urgent
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Layout Presets */}
+                    <div className="bg-card-bg border border-card-border rounded-2xl p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Sliders size={18} className="text-nexus-teal" />
+                        <h3 className="text-lg font-bold">Layout Style</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button
+                          onClick={() =>
+                            setMonitorPrefs({
+                              ...monitorPrefs,
+                              layout: "default",
+                            })
+                          }
+                          className={`
+                            p-4 rounded-xl border-2 transition-all text-left
+                            ${
+                              monitorPrefs.layout === "default"
+                                ? "border-nexus-purple bg-nexus-purple/10"
+                                : "border-white/10 hover:border-white/20 bg-input-bg"
+                            }
+                          `}
+                        >
+                          <div className="font-bold text-sm mb-1">Default</div>
+                          <div className="text-xs text-text-secondary">
+                            Balanced layout with all info
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            setMonitorPrefs({
+                              ...monitorPrefs,
+                              layout: "compact",
+                            })
+                          }
+                          className={`
+                            p-4 rounded-xl border-2 transition-all text-left
+                            ${
+                              monitorPrefs.layout === "compact"
+                                ? "border-nexus-purple bg-nexus-purple/10"
+                                : "border-white/10 hover:border-white/20 bg-input-bg"
+                            }
+                          `}
+                        >
+                          <div className="font-bold text-sm mb-1">Compact</div>
+                          <div className="text-xs text-text-secondary">
+                            Minimal space, key info only
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            setMonitorPrefs({
+                              ...monitorPrefs,
+                              layout: "detailed",
+                            })
+                          }
+                          className={`
+                            p-4 rounded-xl border-2 transition-all text-left
+                            ${
+                              monitorPrefs.layout === "detailed"
+                                ? "border-nexus-purple bg-nexus-purple/10"
+                                : "border-white/10 hover:border-white/20 bg-input-bg"
+                            }
+                          `}
+                        >
+                          <div className="font-bold text-sm mb-1">Detailed</div>
+                          <div className="text-xs text-text-secondary">
+                            Full information display
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Preview Card */}
+                    <div className="bg-card-bg border border-card-border rounded-2xl p-5">
+                      <h3 className="text-sm font-bold mb-3 text-text-secondary uppercase tracking-wider">
+                        Preview
+                      </h3>
+                      <div className="bg-nexus-deep/50 border border-white/5 rounded-xl p-4">
+                        <div className="text-xs text-text-secondary mb-2">
+                          Your monitor card will show:
+                        </div>
+                        <ul className="space-y-1 text-sm">
+                          {monitorPrefs.showWeather && (
+                            <li className="flex items-center gap-2 text-nexus-teal">
+                              <Check size={14} /> Weather information
+                            </li>
+                          )}
+                          {monitorPrefs.showTime && (
+                            <li className="flex items-center gap-2 text-nexus-teal">
+                              <Check size={14} /> Current time & date
+                            </li>
+                          )}
+                          {monitorPrefs.showTaskSummary && (
+                            <li className="flex items-center gap-2 text-nexus-teal">
+                              <Check size={14} /> Tasks due within{" "}
+                              {monitorPrefs.taskAlertDays} days
+                            </li>
+                          )}
+                          {monitorPrefs.showTaskCarousel && (
+                            <li className="flex items-center gap-2 text-amber-400">
+                              <LayoutGrid size={14} /> Auto-rotating task
+                              carousel (1 day → 3 days → 7 days → 14 days)
+                            </li>
+                          )}
+                          <li className="flex items-center gap-2 text-red-400">
+                            <Bell size={14} /> Urgent alerts for tasks within{" "}
+                            {monitorPrefs.urgentThreshold}{" "}
+                            {monitorPrefs.urgentThreshold === 1
+                              ? "day"
+                              : "days"}
+                          </li>
+                        </ul>
+                        <div className="mt-3 pt-3 border-t border-white/5">
+                          <span className="text-xs text-text-secondary">
+                            Layout:{" "}
+                          </span>
+                          <span className="text-sm font-bold text-nexus-purple capitalize">
+                            {monitorPrefs.layout}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
